@@ -1,0 +1,24 @@
+{
+  "name": "fnal-lizaz",
+  "version": "1.0.0",
+  "description": "Minimal manifest so Electron can find main.js",
+  "author": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npx electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.6.0"
+  },
+  "build": {
+    "appId": "com.example.fnal-lizaz",
+    "files": [
+      "**/*"
+    ]
+  },
+  "dependencies": {
+    "dialog": "^0.3.1"
+  }
+}

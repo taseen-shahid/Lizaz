@@ -1,0 +1,1210 @@
+<!doctype html>
+<html>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <meta charset="utf-8">
+  <title>On The Way Vehicles</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  
+  <style>
+    .model-name-red {
+      color: red;
+      font-weight: bold;
+    }
+    
+    .highlight-search {
+      background: yellow;
+      font-weight: bold;
+      padding: 2px;
+    }
+
+    #onTheWayList {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .vehicle-box {
+      display: flex;
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 8px;
+      align-items: flex-start;
+      gap: 15px;
+      background-color: #fff9e6;
+      border-left: 5px solid #ffc107;
+    }
+    
+    .vehicle-details {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 14px;
+      flex: 1;
+    }
+    
+    .vehicle-details strong {
+      font-size: 16px;
+      color: #222;
+    }
+    
+    .vehicle-info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px 10px;
+    }
+
+    .vehicle-info-grid div {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vehicle-actions {
+      margin-top: 8px;
+    }
+    
+    .vehicle-actions button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .search-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    #searchBar {
+      padding: 6px 10px;
+      font-size: 14px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    /* NEW: Supplier filter buttons container */
+    #supplierButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    
+    #supplierButtons button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #17a2b8;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    #supplierButtons button:hover {
+      background-color: #138496;
+    }
+    
+    #supplierButtons button.filter-active-supplier {
+      background-color: #dc3545 !important;
+      color: white;
+    }
+    
+    /* Ship name buttons container */
+    #shipNameButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    
+    #shipNameButtons button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #ffc107;
+      color: #856404;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    #shipNameButtons button:hover {
+      background-color: #ffb300;
+    }
+    
+    #shipNameButtons button.filter-active {
+      background-color: #dc3545 !important;
+      color: white;
+    }
+    
+    #stockCount {
+      font-size: 18px;
+      font-weight: normal;
+      color: #555;
+      margin-left: 8px;
+    }
+    
+    .statusSelect {
+      width: 140px !important;
+      max-width: 140px;
+      padding: 4px 8px !important;
+      border: 1px solid #ccc !important;
+      border-radius: 4px !important;
+      font-size: 13px !important;
+      background-color: white !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+      height: 28px !important;
+      margin-left: 5px !important;
+    }
+    
+    .statusSelect[data-status="pending"] {
+      background-color: #fff3cd !important;
+      border-color: #ffc107 !important;
+    }
+    
+    select.statusSelect option[value="available"] {
+      background-color: #d4edda;
+    }
+    
+    select.statusSelect option[value="reserved"] {
+      background-color: #fff3cd;
+    }
+    
+    .filter-active {
+      background-color: #dc3545 !important;
+      color: white !important;
+    }
+    
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .alert-content {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .alert-title {
+      background: #ffc107;
+      color: #856404;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .alert-message {
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .alert-button {
+      background: #ffc107;
+      color: #856404;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+      font-weight: bold;
+    }
+    
+    .alert-button:hover {
+      background: #ffb300;
+    }
+    
+    .pending-badge {
+      display: inline-block;
+      background-color: #ffc107;
+      color: #856404;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
+    .shipment-info {
+      background: #fff3cd;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #ffc107;
+    }
+    
+    .shipment-info h4 {
+      color: #856404;
+      margin-bottom: 10px;
+    }
+    
+    .ship-name-select {
+      width: 500px !important;
+      min-width: 180px !important;
+      max-width: 250px !important;
+      padding: 4px 8px !important;
+      border: 1px solid #ffc107 !important;
+      border-radius: 4px !important;
+      font-size: 13px !important;
+      background-color: white !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+      height: 28px !important;
+    }
+
+    .ship-name-select:hover {
+      border-color: #ffc107 !important;
+      background-color: #fff9e6 !important;
+    }
+    
+    /* Editable shipment date input styling */
+    .shipment-date-input {
+      width: 200px !important;
+      min-width: 180px !important;
+      max-width: 250px !important;
+      padding: 4px 8px !important;
+      border: 1px solid #ffc107 !important;
+      border-radius: 4px !important;
+      background-color: #fff9e6 !important;
+      font-size: 13px !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+      height: 28px !important;
+    }
+    
+    .shipment-date-input:focus {
+      outline: none;
+      border-color: #dc3545;
+      background-color: #fff;
+    }
+    
+    /* Popup Form Styles */
+    .popup-form {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+    }
+    
+    .popup-form-content {
+      background: white;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 25px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+    
+    .popup-form-content h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ffc107;
+      padding-bottom: 10px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #495057;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+    
+    .form-group input,
+    .form-group select {
+      padding: 8px 10px;
+      border: 2px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #ffc107;
+    }
+    
+    .form-group input:disabled,
+    .form-group select:disabled {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+    }
+    
+    .required::after {
+      content: " *";
+      color: #dc3545;
+    }
+    
+    .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #dee2e6;
+    }
+    
+    .popup-actions button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .confirm-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .confirm-btn:hover {
+      background-color: #218838;
+    }
+    
+    .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #5a6268;
+    }
+    
+    @media (max-width: 768px) {
+      .vehicle-info-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="customAlert" class="custom-alert">
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">Alert</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-button" id="alertOkButton">OK</button>
+    </div>
+  </div>
+
+  <!-- Popup Form for Complete Vehicle Details -->
+  <div id="vehicleFormPopup" class="popup-form">
+    <div class="popup-form-content">
+      <h2>Complete Vehicle Details</h2>
+      <form id="completeVehicleForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="required">RECEIVING DATE</label>
+            <input type="date" id="popupReceivingDate" required>
+          </div>
+          <div class="form-group">
+            <label class="required">CONSIGNEE</label>
+            <select id="popupConsignee" required></select>
+          </div>
+          <div class="form-group">
+            <label class="required">SUPPLIER</label>
+            <select id="popupSupplier" required></select>
+          </div>
+          <div class="form-group">
+            <label class="required">CHASSIS NUMBER</label>
+            <input type="text" id="popupChassis" required placeholder="ENTER CHASSIS NUMBER">
+          </div>
+          <div class="form-group">
+            <label class="required">ENGINE NUMBER</label>
+            <input type="text" id="popupEngine" required placeholder="ENTER ENGINE NUMBER">
+          </div>
+          <div class="form-group">
+            <label class="required">BRAND</label>
+            <select id="popupBrand" required></select>
+          </div>
+          <div class="form-group">
+            <label class="required">MODEL</label>
+            <select id="popupModel" required></select>
+          </div>
+          <div class="form-group">
+            <label class="required">CC</label>
+            <select id="popupCc" required></select>
+          </div>
+          <div class="form-group">
+            <label class="required">COLOR</label>
+            <select id="popupColor" required></select>
+          </div>
+          <div class="form-group">
+            <label>PACKAGE</label>
+            <select id="popupPackage">
+              <option value="STANDARD">STANDARD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required">FUEL</label>
+            <select id="popupFuel" required>
+              <option value="">SELECT FUEL</option>
+              <option value="PETROL">PETROL</option>
+              <option value="DIESEL">DIESEL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required">SHIFT</label>
+            <select id="popupShift" required>
+              <option value="">SELECT SHIFT</option>
+              <option value="AUTO">AUTO</option>
+              <option value="MANUAL">MANUAL</option>
+              <option value="DUAL">DUAL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required">DRIVE</label>
+            <select id="popupDrive" required>
+              <option value="">SELECT DRIVE</option>
+              <option value="2WD">2WD</option>
+              <option value="4WD">4WD</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="required">MILEAGE</label>
+            <input type="number" id="popupMileage" required placeholder="ENTER MILEAGE" min="0">
+          </div>
+          <div class="form-group">
+            <label class="required">LOCATION</label>
+            <select id="popupLocation" required></select>
+          </div>
+          <div class="form-group">
+            <label>REGISTRATION NUMBER</label>
+            <input type="text" id="popupRegno" placeholder="ABC 123D" maxlength="8">
+          </div>
+          <div class="form-group">
+            <label>LOGBOOK</label>
+            <input type="text" id="popupLogbook" placeholder="OPTIONAL LOGBOOK INFO">
+          </div>
+          <div class="form-group">
+            <label>REMARKS</label>
+            <input type="text" id="popupRemarks" placeholder="OPTIONAL REMARKS">
+          </div>
+        </div>
+        <div class="popup-actions">
+          <button type="button" class="cancel-btn" id="closePopupBtn">CANCEL</button>
+          <button type="submit" class="confirm-btn">MOVE TO STOCK</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+    <a href="dashboard.html">DASHBOARD</a>
+    <a href="onTheWay.html" class="active">On The Way</a>
+    <a href="stock.html">STOCK</a>
+    <a href="reserved.html">RESERVED</a>
+    <a href="repossessed.html">REPOSSESSED</a>
+    <a href="sold.html">SOLD</a>
+    <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+    <a href="logbooks.html">LOGBOOKS</a> 
+    <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <div class="main-content">
+    <header>
+      <div>
+        <h1 style="display:inline;">ON THE WAY VEHICLES</h1>
+        <span id="stockCount">(0)</span>
+      </div>
+      <div class="search-container">
+        <div style="position:relative;">
+          <input type="text" id="searchBar" placeholder="SEARCH BY ANY FIELD..." />
+          <span id="clearSearch" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;font-weight:bold;display:none;">✕</span>
+        </div>
+      </div>
+      <button id="downloadBtn" style="padding:6px 12px;background:#025f19;color:#f7faf9;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">DOWNLOAD REPORT</button>
+    </header>
+
+    <!-- NEW: Supplier filter section (before ship names) -->
+    <div id="supplierButtons" style="margin: 15px 0 5px 0;"></div>
+    
+    <!-- Ship name filter section (after supplier filters) -->
+    <div id="shipNameButtons"></div>
+
+    <div id="activeFilters" style="margin: 10px 0; display: none;">
+      <span style="background-color: #e9ecef; padding: 5px 10px; border-radius: 4px; font-size: 13px;">
+        <span id="filterDescription"></span>
+        <button id="clearAllFilters" style="margin-left: 10px; background: none; border: none; color: #dc3545; cursor: pointer; font-weight: bold;">✕</button>
+      </span>
+    </div>
+
+    <div id="onTheWayList">
+      <p>Loading vehicles...</p>
+    </div>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <script type="module">
+      import { db, ref, onValue, set, remove, get, update } from '../firebase.js';
+
+      const onTheWayList = document.getElementById('onTheWayList');
+      const supplierButtonsDiv = document.getElementById('supplierButtons');
+      const shipNameButtonsDiv = document.getElementById('shipNameButtons');
+      const stockCount = document.getElementById('stockCount');
+      const searchBar = document.getElementById('searchBar');
+      const clearSearch = document.getElementById("clearSearch");
+      const activeFilters = document.getElementById('activeFilters');
+      const filterDescription = document.getElementById('filterDescription');
+      const clearAllFilters = document.getElementById('clearAllFilters');
+      const vehicleFormPopup = document.getElementById('vehicleFormPopup');
+      const completeVehicleForm = document.getElementById('completeVehicleForm');
+      
+      let vehiclesData = {};
+      let currentSupplierFilter = '';
+      let currentShipFilter = '';
+      let searchQuery = '';
+      let pendingVehicleToMove = null;
+      let pendingVehicleId = null;
+      let brands = {};
+      let shipNamesList = [];
+
+      // Popup form elements
+      const popupReceivingDate = document.getElementById('popupReceivingDate');
+      const popupConsignee = document.getElementById('popupConsignee');
+      const popupSupplier = document.getElementById('popupSupplier');
+      const popupChassis = document.getElementById('popupChassis');
+      const popupEngine = document.getElementById('popupEngine');
+      const popupBrand = document.getElementById('popupBrand');
+      const popupModel = document.getElementById('popupModel');
+      const popupCc = document.getElementById('popupCc');
+      const popupColor = document.getElementById('popupColor');
+      const popupPackage = document.getElementById('popupPackage');
+      const popupFuel = document.getElementById('popupFuel');
+      const popupShift = document.getElementById('popupShift');
+      const popupDrive = document.getElementById('popupDrive');
+      const popupMileage = document.getElementById('popupMileage');
+      const popupLocation = document.getElementById('popupLocation');
+      const popupRegno = document.getElementById('popupRegno');
+      const popupLogbook = document.getElementById('popupLogbook');
+      const popupRemarks = document.getElementById('popupRemarks');
+
+      function showAlert(message, title = "Alert") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          alertOkButton.textContent = 'OK';
+          
+          alert.style.display = 'flex';
+          
+          const closeAlert = () => {
+            alert.style.display = 'none';
+            resolve();
+          };
+          
+          alertOkButton.onclick = closeAlert;
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert();
+          };
+        });
+      }
+
+      function showConfirm(message, title = "Confirm") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          alertOkButton.textContent = 'Confirm';
+          
+          alert.style.display = 'flex';
+          
+          const closeAlert = (result) => {
+            alert.style.display = 'none';
+            alertOkButton.textContent = 'OK';
+            resolve(result);
+          };
+          
+          alertOkButton.onclick = () => closeAlert(true);
+          
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert(false);
+          };
+        });
+      }
+
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function highlight(text, query) {
+        if (!query) return text;
+        const pattern = escapeRegExp(query);
+        const regex = new RegExp(`(${pattern})`, 'gi');
+        return (text + '').replace(regex, '<span class="highlight-search">$1</span>');
+      }
+
+      function formatDisplayDate(raw) {
+        if (!raw) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const d = new Date(raw);
+          if (!isNaN(d.getTime())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+          }
+        }
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+        }
+        return raw;
+      }
+
+      function formatDateForExcel(raw) {
+        if (!raw) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const d = new Date(raw);
+          if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(2);
+            return `${day}-${month}-${year}`;
+          }
+        }
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const day = String(parsed.getDate()).padStart(2, '0');
+          const month = String(parsed.getMonth() + 1).padStart(2, '0');
+          const year = String(parsed.getFullYear()).slice(2);
+          return `${day}-${month}-${year}`;
+        }
+        return raw;
+      }
+
+      function getStatusOptions(currentStatus) {
+        if (currentStatus === 'pending') {
+          return [
+            { value: 'pending', text: 'ON THE WAY', selected: true },
+            { value: 'available', text: 'AVAILABLE' }
+          ];
+        }
+        return [
+          { value: 'available', text: 'AVAILABLE', selected: true }
+        ];
+      }
+
+      function getStatusClass(status) {
+        if (status === 'pending') return 'status-pending';
+        if (status === 'available') return 'status-available';
+        if (status === 'reserved') return 'status-reserved';
+        return 'status-pending';
+      }
+
+      function loadShipNames() {
+        onValue(ref(db, 'essentials/ship_name'), snap => {
+          const data = snap.val() || {};
+          shipNamesList = Object.values(data).map(item => item.name || item).filter(n => n && n.trim()).sort();
+          renderShipNameButtons();
+        });
+      }
+
+      // NEW: Render supplier filter buttons (all suppliers from pending vehicles)
+      function renderSupplierButtons() {
+        supplierButtonsDiv.innerHTML = "";
+        const pendingVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'pending');
+        
+        const allSuppliersBtn = document.createElement("button");
+        allSuppliersBtn.textContent = "ALL SUPPLIERS";
+        allSuppliersBtn.onclick = () => {
+          currentSupplierFilter = "";
+          renderList();
+          renderSupplierButtons();
+          renderShipNameButtons();
+        };
+        if (!currentSupplierFilter) allSuppliersBtn.classList.add("filter-active-supplier");
+        supplierButtonsDiv.appendChild(allSuppliersBtn);
+
+        const suppliersSet = new Set();
+        pendingVehicles.forEach(v => {
+          const supplier = (v.supplier || '').toString().trim().toUpperCase();
+          if (supplier) suppliersSet.add(supplier);
+        });
+        const sortedSuppliers = Array.from(suppliersSet).sort((a,b) => a.localeCompare(b));
+        
+        sortedSuppliers.forEach(supplier => {
+          const btn = document.createElement("button");
+          btn.textContent = supplier;
+          if (currentSupplierFilter === supplier) btn.classList.add("filter-active-supplier");
+          btn.onclick = () => {
+            currentSupplierFilter = supplier;
+            renderList();
+            renderSupplierButtons();
+            renderShipNameButtons();
+          };
+          supplierButtonsDiv.appendChild(btn);
+        });
+      }
+
+      // Updated ship name buttons (now dependent on supplier filter)
+      function renderShipNameButtons() {
+        shipNameButtonsDiv.innerHTML = "";
+        
+        let pendingVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'pending');
+        
+        // Apply supplier filter to ship buttons list
+        if (currentSupplierFilter) {
+          pendingVehicles = pendingVehicles.filter(v => (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
+        }
+        
+        const allShipsBtn = document.createElement("button");
+        allShipsBtn.textContent = "ALL SHIPS";
+        allShipsBtn.onclick = () => {
+          currentShipFilter = "";
+          renderList();
+          renderShipNameButtons();
+        };
+        if (!currentShipFilter) allShipsBtn.classList.add("filter-active");
+        shipNameButtonsDiv.appendChild(allShipsBtn);
+
+        const shipNames = [...new Set(pendingVehicles
+          .map(v => (v?.shipName || '').toString().trim().toUpperCase())
+          .filter(Boolean))]
+          .sort((a,b) => a.localeCompare(b));
+
+        shipNames.forEach(name => {
+          const btn = document.createElement("button");
+          btn.textContent = name;
+          if (currentShipFilter === name) btn.classList.add("filter-active");
+          btn.onclick = () => {
+            currentShipFilter = name;
+            renderList();
+            renderShipNameButtons();
+          };
+          shipNameButtonsDiv.appendChild(btn);
+        });
+      }
+
+      searchBar.addEventListener("input", () => {
+        searchQuery = searchBar.value.trim().toLowerCase();
+        clearSearch.style.display = searchQuery ? "block" : "none";
+        renderList();
+      });
+
+      clearSearch.onclick = () => {
+        searchBar.value = "";
+        searchQuery = "";
+        clearSearch.style.display = "none";
+        renderList();
+      };
+
+      function updateActiveFiltersDisplay() {
+        const filters = [];
+        if (currentSupplierFilter) filters.push(`Supplier: ${currentSupplierFilter}`);
+        if (currentShipFilter) filters.push(`Ship Name: ${currentShipFilter}`);
+        if (searchQuery) filters.push(`Search: "${searchQuery}"`);
+        
+        if (filters.length > 0) {
+          filterDescription.textContent = `Active filters: ${filters.join(' | ')}`;
+          activeFilters.style.display = 'block';
+        } else {
+          activeFilters.style.display = 'none';
+        }
+      }
+
+      async function updateShipmentDate(vehicleId, newDate) {
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), {
+            shipmentDate: newDate,
+            updatedAt: Date.now()
+          });
+          
+          const onTheWaySnap = await get(ref(db, 'onTheWay'));
+          const onTheWayData = onTheWaySnap.val() || {};
+          for (const key in onTheWayData) {
+            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) {
+              await update(ref(db, `onTheWay/${key}`), { shipmentDate: newDate, updatedAt: Date.now() });
+              break;
+            }
+          }
+          await showAlert(`Shipment date updated successfully!`, 'Success');
+          renderList();
+        } catch (error) {
+          console.error('Error updating shipment date:', error);
+          await showAlert('Error updating shipment date. Please try again.', 'Error');
+        }
+      }
+
+      function loadEssentialData() {
+        onValue(ref(db, 'essentials/brand'), snap => {
+          brands = snap.val() || {};
+          popupBrand.innerHTML = '<option value="">SELECT BRAND</option>';
+          Object.values(brands).map(b => b.name).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.toUpperCase();
+            popupBrand.appendChild(opt);
+          });
+        });
+
+        onValue(ref(db, 'essentials/consignee'), snap => {
+          const data = snap.val() || {};
+          popupConsignee.innerHTML = '<option value="">SELECT CONSIGNEE</option>';
+          Object.values(data).map(v => v.name || v).filter(n => n).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.toUpperCase();
+            popupConsignee.appendChild(opt);
+          });
+        });
+
+        onValue(ref(db, 'essentials/supplier'), snap => {
+          const data = snap.val() || {};
+          popupSupplier.innerHTML = '<option value="">SELECT SUPPLIER</option>';
+          Object.values(data).map(v => v.name || v).filter(n => n).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.toUpperCase();
+            popupSupplier.appendChild(opt);
+          });
+        });
+
+        onValue(ref(db, 'essentials/color'), snap => {
+          const data = snap.val() || {};
+          popupColor.innerHTML = '<option value="">SELECT COLOR</option>';
+          Object.values(data).map(v => v.name || v).filter(n => n).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.toUpperCase();
+            popupColor.appendChild(opt);
+          });
+        });
+
+        onValue(ref(db, 'essentials/location'), snap => {
+          const data = snap.val() || {};
+          popupLocation.innerHTML = '<option value="">SELECT LOCATION</option>';
+          Object.values(data).map(v => v.name || v).filter(n => n).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name.toUpperCase();
+            popupLocation.appendChild(opt);
+          });
+        });
+        
+        loadShipNames();
+      }
+
+      popupBrand.addEventListener('change', () => {
+        const brandName = popupBrand.value;
+        popupModel.innerHTML = '<option value="">SELECT MODEL</option>';
+        popupCc.innerHTML = '<option value="">SELECT CC</option>';
+        if (!brandName) return;
+        const brand = Object.values(brands).find(b => b.name === brandName);
+        if (brand && brand.models) {
+          Object.keys(brand.models).sort().forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m.toUpperCase();
+            popupModel.appendChild(opt);
+          });
+        }
+      });
+
+      popupModel.addEventListener('change', async () => {
+        const modelName = popupModel.value;
+        popupCc.innerHTML = '<option value="">SELECT CC</option>';
+        if (!modelName) return;
+        try {
+          const modelSnap = await get(ref(db, `essentials/model/${modelName}/cc`));
+          if (modelSnap.exists()) {
+            const ccs = modelSnap.val() || {};
+            Object.keys(ccs).sort((a,b)=>Number(a)-Number(b)).forEach(cc => {
+              const opt = document.createElement('option');
+              opt.value = cc;
+              opt.textContent = cc;
+              popupCc.appendChild(opt);
+            });
+          }
+        } catch (error) {
+          console.error('Error loading CC:', error);
+        }
+      });
+
+      function showVehicleForm(vehicle, vehicleId) {
+        const today = new Date().toISOString().split('T')[0];
+        popupReceivingDate.value = today;
+        popupReceivingDate.max = today;
+        popupChassis.value = vehicle.chassis || '';
+        popupEngine.value = vehicle.engine || '';
+        popupBrand.value = vehicle.brand || '';
+        popupColor.value = vehicle.color || '';
+        popupSupplier.value = vehicle.supplier || '';
+        popupPackage.value = vehicle.package || 'STANDARD';
+        if (vehicle.cc) popupCc.value = vehicle.cc;
+        if (vehicle.fuel) popupFuel.value = vehicle.fuel;
+        if (vehicle.shift) popupShift.value = vehicle.shift;
+        if (vehicle.drive) popupDrive.value = vehicle.drive;
+        
+        if (vehicle.brand) {
+          popupBrand.dispatchEvent(new Event('change'));
+          setTimeout(() => {
+            if (vehicle.model) {
+              popupModel.value = vehicle.model;
+              popupModel.dispatchEvent(new Event('change'));
+              setTimeout(() => {
+                if (vehicle.cc) {
+                  let ccExists = false;
+                  for (let i = 0; i < popupCc.options.length; i++) {
+                    if (popupCc.options[i].value === vehicle.cc) { ccExists = true; break; }
+                  }
+                  if (ccExists) popupCc.value = vehicle.cc;
+                  else {
+                    const option = document.createElement('option');
+                    option.value = vehicle.cc;
+                    option.textContent = vehicle.cc;
+                    popupCc.appendChild(option);
+                    popupCc.value = vehicle.cc;
+                  }
+                }
+              }, 200);
+            }
+          }, 100);
+        }
+        vehicleFormPopup.style.display = 'flex';
+        pendingVehicleToMove = vehicle;
+        pendingVehicleId = vehicleId;
+      }
+
+      async function moveToStockWithDetails(vehicleId, vehicleData, formData) {
+        try {
+          const originalId = vehicleData.id || vehicleId;
+          const updatedVehicle = { ...vehicleData, id: originalId, status: 'available', updatedAt: Date.now(), receivingDate: formData.receivingDate, consignee: formData.consignee, supplier: formData.supplier, chassis: formData.chassis, engine: formData.engine, brand: formData.brand, model: formData.model, cc: formData.cc, color: formData.color, package: formData.package, fuel: formData.fuel, shift: formData.shift, drive: formData.drive, mileage: formData.mileage, location: formData.location, regno: formData.regno || null, logbook: formData.logbook || null, remarks: formData.remarks || null, statusHistory: [...(vehicleData.statusHistory || []), { status: 'available', date: new Date().toISOString().split('T')[0], timestamp: Date.now(), fromModule: 'onTheWay' }] };
+          await update(ref(db, `vehicles/${vehicleId}`), updatedVehicle);
+          const onTheWaySnap = await get(ref(db, 'onTheWay'));
+          const onTheWayData = onTheWaySnap.val() || {};
+          let onTheWayKey = null;
+          for (const key in onTheWayData) {
+            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) { onTheWayKey = key; break; }
+          }
+          if (onTheWayKey) await remove(ref(db, `onTheWay/${onTheWayKey}`));
+          vehicleFormPopup.style.display = 'none';
+          completeVehicleForm.reset();
+          pendingVehicleToMove = null;
+          pendingVehicleId = null;
+          await showAlert(`Vehicle moved to AVAILABLE stock successfully!\nVehicle ID: ${originalId}`, 'Success');
+          renderList();
+          setTimeout(() => { window.location.href = 'stock.html'; }, 1500);
+        } catch (error) { console.error('Error moving vehicle:', error); await showAlert('Error moving vehicle. Please try again.', 'Error'); }
+      }
+
+      function fetchVehicles() {
+        onValue(ref(db, 'vehicles'), snap => {
+          const allVehicles = snap.val() || {};
+          const pendingVehicles = {};
+          Object.keys(allVehicles).forEach(key => { if (allVehicles[key].status === 'pending') pendingVehicles[key] = allVehicles[key]; });
+          vehiclesData = pendingVehicles;
+          renderSupplierButtons();
+          renderShipNameButtons();
+          renderList();
+        });
+      }
+
+      async function updateShipName(vehicleId, oldShipName, newShipName) {
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), { shipName: newShipName.toUpperCase(), updatedAt: Date.now() });
+          const onTheWaySnap = await get(ref(db, 'onTheWay'));
+          const onTheWayData = onTheWaySnap.val() || {};
+          for (const key in onTheWayData) {
+            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) {
+              await update(ref(db, `onTheWay/${key}`), { shipName: newShipName.toUpperCase(), updatedAt: Date.now() });
+              break;
+            }
+          }
+          await showAlert(`Ship name updated from "${oldShipName}" to "${newShipName}" successfully!`, 'Success');
+          renderList();
+          renderSupplierButtons();
+          renderShipNameButtons();
+        } catch (error) { console.error('Error updating ship name:', error); await showAlert('Error updating ship name. Please try again.', 'Error'); }
+      }
+
+      function renderList() {
+        onTheWayList.innerHTML = '';
+        let filteredVehicles = Object.values(vehiclesData || {});
+        if (currentSupplierFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
+        if (currentShipFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.shipName || '').toString().trim().toUpperCase() === currentShipFilter);
+        if (searchQuery) {
+          const searchTerms = searchQuery.split('+').map(term => term.trim().toLowerCase()).filter(term => term.length > 0);
+          filteredVehicles = filteredVehicles.filter(v => {
+            const searchableFields = [v.brand, v.model, v.supplier, v.shipName, v.chassis, v.color, v.modelYearMonth, v.package, v.id, v.status, v.shipmentDate];
+            const searchableText = searchableFields.map(field => String(field || '').toLowerCase()).join(' ');
+            return searchTerms.every(term => searchableText.includes(term));
+          });
+        }
+        filteredVehicles.sort((a, b) => { const modelA = (a.model || '').toUpperCase(); const modelB = (b.model || '').toUpperCase(); return modelA < modelB ? -1 : modelA > modelB ? 1 : 0; });
+        stockCount.textContent = `(${filteredVehicles.length})`;
+        updateActiveFiltersDisplay();
+        if (filteredVehicles.length === 0) { onTheWayList.innerHTML = '<p>No pending vehicles found.</p>'; return; }
+
+        filteredVehicles.forEach(v => {
+          const key = Object.keys(vehiclesData).find(k => vehiclesData[k] === v);
+          const statusOptions = getStatusOptions(v.status || 'pending');
+          const statusClass = getStatusClass(v.status || 'pending');
+          const div = document.createElement('div');
+          div.className = 'vehicle-box';
+          const shipName = v.shipName || '';
+          const shipmentDateRaw = v.shipmentDate || '';
+          const shipmentDateDisplay = shipmentDateRaw ? formatDisplayDate(shipmentDateRaw) : '';
+          const vehicleId = key || '';
+          const supplier = v.supplier || '';
+          const chassis = v.chassis || '';
+          const color = v.color || '';
+          const year = v.modelYearMonth ? v.modelYearMonth.split('-')[0] : '';
+          const packageType = v.package || '';
+          let shipOptions = '<option value="">SELECT VESSEL</option>';
+          shipNamesList.forEach(name => { const selected = (name.toUpperCase() === shipName.toUpperCase()) ? 'selected' : ''; shipOptions += `<option value="${name}" ${selected}>${name.toUpperCase()}</option>`; });
+          
+          div.innerHTML = `
+            <div class="vehicle-details">
+              <strong>${highlight((v.brand || '').toString().toUpperCase(), searchQuery)} <span class="model-name-red">${highlight((v.model || '').toString().toUpperCase(), searchQuery)}</span><span class="pending-badge">🚢 ON THE WAY</span></strong>
+              <div class="shipment-info">
+                <h4>📦 SHIPMENT INFORMATION</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                  <div><b>SHIP NAME:</b> <select class="ship-name-select" data-id="${key}" data-current-ship="${shipName}">${shipOptions}</select></div>
+                  <div><b>SHIPMENT DATE:</b> <input type="date" class="shipment-date-input" data-id="${key}" value="${shipmentDateRaw || ''}" min="2000-01-01" max="2999-12-31" style="width: 100%;" /></div>
+                </div>
+              </div>
+              <div class="vehicle-info-grid">
+                <div><b>VEHICLE ID:</b> ${highlight(vehicleId.toString().toUpperCase(), searchQuery)}</div>
+                <div><b>SUPPLIER:</b> ${highlight(supplier.toString().toUpperCase(), searchQuery)}</div>
+                ${chassis ? `<div><b>CHASSIS NO:</b> ${highlight(chassis.toString().toUpperCase(), searchQuery)}</div>` : ''}
+                ${color ? `<div><b>COLOR:</b> ${highlight(color.toString().toUpperCase(), searchQuery)}</div>` : ''}
+                ${year ? `<div><b>YEAR:</b> ${highlight(year, searchQuery)}</div>` : ''}
+                ${packageType ? `<div><b>PACKAGE:</b> ${highlight(packageType.toString().toUpperCase(), searchQuery)}</div>` : ''}
+                <div><b>STATUS:</b> <select class="statusSelect ${statusClass}" data-id="${key}" data-status="${v.status || 'pending'}">${statusOptions.map(option => `<option value="${option.value}" ${option.selected ? 'selected' : ''}>${option.text}</option>`).join('')}</select></div>
+              </div>
+            </div>
+          `;
+          onTheWayList.appendChild(div);
+          
+          const shipSelect = div.querySelector('.ship-name-select');
+          if (shipSelect) {
+            shipSelect.addEventListener('change', async (e) => {
+              e.stopPropagation();
+              const newShipName = e.target.value;
+              const vid = e.target.dataset.id;
+              const oldShipName = e.target.dataset.currentShip;
+              if (!newShipName) return;
+              if (newShipName.toUpperCase() === oldShipName.toUpperCase()) return;
+              const confirm = await showConfirm(`Change ship name from "${oldShipName}" to "${newShipName}"?`, 'Confirm Change');
+              if (confirm) await updateShipName(vid, oldShipName, newShipName);
+              else e.target.value = oldShipName;
+            });
+          }
+          
+          const dateInput = div.querySelector('.shipment-date-input');
+          if (dateInput) {
+            dateInput.addEventListener('change', async (e) => {
+              e.stopPropagation();
+              const newDate = e.target.value;
+              const vid = e.target.dataset.id;
+              if (!newDate) return;
+              const confirm = await showConfirm(`Update shipment date to ${newDate}?`, 'Confirm Date Change');
+              if (confirm) await updateShipmentDate(vid, newDate);
+              else e.target.value = v.shipmentDate || '';
+            });
+          }
+        });
+      }
+
+      onTheWayList.addEventListener('change', async (e) => {
+        if (!e.target.classList.contains('statusSelect')) return;
+        const vehicleId = e.target.dataset.id;
+        const newStatus = e.target.value;
+        if (!vehicleId || !newStatus) return;
+        const vehicleRef = ref(db, `vehicles/${vehicleId}`);
+        const snap = await get(vehicleRef);
+        if (!snap.exists()) return;
+        const vehicle = snap.val();
+        if (newStatus === 'pending') { e.target.value = 'pending'; return; }
+        if (newStatus === 'available') { showVehicleForm(vehicle, vehicleId); e.target.value = 'pending'; }
+      });
+
+      completeVehicleForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!pendingVehicleToMove || !pendingVehicleId) return;
+        const requiredFields = [popupReceivingDate, popupConsignee, popupSupplier, popupChassis, popupEngine, popupBrand, popupModel, popupCc, popupColor, popupFuel, popupShift, popupDrive, popupMileage, popupLocation];
+        for (const field of requiredFields) { if (!field.value) { await showAlert(`Please fill in all required fields`, 'Error'); return; } }
+        const chassisValue = popupChassis.value.trim().toUpperCase();
+        const engineValue = popupEngine.value.trim().toUpperCase();
+        if (chassisValue === engineValue) { await showAlert(`Chassis Number and Engine Number cannot be the same.`, 'Error'); popupEngine.focus(); return; }
+        const formData = { receivingDate: popupReceivingDate.value, consignee: popupConsignee.value.trim().toUpperCase(), supplier: popupSupplier.value.trim().toUpperCase(), chassis: chassisValue, engine: engineValue, brand: popupBrand.value.trim().toUpperCase(), model: popupModel.value.trim().toUpperCase(), cc: popupCc.value, color: popupColor.value.trim().toUpperCase(), package: popupPackage.value.toUpperCase(), fuel: popupFuel.value.trim().toUpperCase(), shift: popupShift.value.trim().toUpperCase(), drive: popupDrive.value.trim().toUpperCase(), mileage: Number(popupMileage.value), location: popupLocation.value.trim().toUpperCase(), regno: popupRegno.value.trim().toUpperCase() || null, logbook: popupLogbook.value.trim().toUpperCase() || null, remarks: popupRemarks.value.trim().toUpperCase() || null };
+        await moveToStockWithDetails(pendingVehicleId, pendingVehicleToMove, formData);
+      });
+
+      document.getElementById("closePopupBtn").addEventListener("click", () => { vehicleFormPopup.style.display = 'none'; pendingVehicleToMove = null; pendingVehicleId = null; completeVehicleForm.reset(); });
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+        const vehicles = Object.values(vehiclesData || {});
+        const sortedVehicles = [...vehicles].sort((a, b) => { const dateA = a.shipmentDate || ''; const dateB = b.shipmentDate || ''; if (dateA !== dateB) return dateA.localeCompare(dateB); const vesselA = (a.shipName || '').toUpperCase(); const vesselB = (b.shipName || '').toUpperCase(); return vesselA.localeCompare(vesselB); });
+        const wsData = [["DATE", "VESSEL", "NO.", "NAME", "MODEL", "CHASSIS", "YEAR", "COLOR"]];
+        sortedVehicles.forEach(v => { wsData.push([ v.shipmentDate ? formatDateForExcel(v.shipmentDate) : '', (v.shipName || '').toUpperCase(), (v.id || v.vehicleId || '').toString(), (v.brand || '').toUpperCase(), (v.model || '').toUpperCase(), v.chassis || '', v.modelYearMonth ? v.modelYearMonth.split('-')[0] : '', (v.color || '').toUpperCase() ]); });
+        const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!cols'] = [{ wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 8 }, { wch: 12 }]; XLSX.utils.book_append_sheet(wb, ws, "OnTheWay"); XLSX.writeFile(wb, `OnTheWay_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+      });
+      clearAllFilters.addEventListener('click', () => { currentSupplierFilter = ''; currentShipFilter = ''; searchQuery = ''; searchBar.value = ''; clearSearch.style.display = 'none'; renderSupplierButtons(); renderShipNameButtons(); renderList(); });
+      loadEssentialData();
+      fetchVehicles();
+    </script>
+  </div>
+</body>
+</html>

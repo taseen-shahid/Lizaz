@@ -1,0 +1,1197 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Add New Vehicle</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    
+    /* Main layout */
+    .main-content {
+      margin-left: 250px;
+      padding: 0px;
+      min-height: 100vh;
+      width: calc(100% - 250px);
+      overflow: hidden;
+    }
+    
+    /* Form container */
+    #addForm {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid #dee2e6;
+      width: 100%;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    /* Top toggle bar */
+    .top-toggle-bar {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      padding: 15px 25px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .toggle-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .mode-badge {
+      background: #2c3e50;
+      color: white;
+      padding: 6px 15px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 24px;
+      width: 24px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #ffc107;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(30px);
+    }
+    
+    .toggle-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: #495057;
+      letter-spacing: 0.5px;
+    }
+    
+    .info-hint {
+      font-size: 12px;
+      color: #6c757d;
+      background: #fff3cd;
+      padding: 6px 12px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .info-hint i {
+      font-style: normal;
+      font-size: 14px;
+    }
+    
+    /* Form grid - fixed width to prevent overflow */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 5px;
+      align-items: start;
+      width: 100%;
+    }
+    
+    .form-row > div {
+      position: relative;
+      width: 100%;
+    }
+    
+    /* Form labels */
+    .form-row label {
+      display: block;
+      margin-bottom: 2px;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Form inputs */
+    .form-row input,
+    .form-row select {
+      width: 100%;
+      padding: 8px 8px;
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: white;
+      color: #495057;
+      font-family: inherit;
+    }
+    
+    .form-row input:focus,
+    .form-row select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+    
+    .form-row input:disabled,
+    .form-row select:disabled {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+      opacity: 0.7;
+      border-color: #dee2e6;
+    }
+    
+    /* Select styling */
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      padding-right: 40px !important;
+    }
+    
+    /* Submit button */
+    button[type="submit"] {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 30px auto 0;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    button[type="submit"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+      background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    }
+    
+    button[type="submit"]:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* Status message */
+    #status {
+      text-align: center;
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: 500;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .loading {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    
+    /* Required field indicator */
+    .required::after {
+      content: " *";
+      color: #dc3545;
+    }
+    
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .form-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .main-content {
+        margin-left: 220px;
+        width: calc(100% - 220px);
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 15px;
+      }
+      
+      #addForm {
+        padding: 20px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+      
+      header h1 {
+        font-size: 22px;
+      }
+      
+      button[type="submit"] {
+        max-width: 100%;
+        padding: 12px 20px;
+      }
+      
+      .top-toggle-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .toggle-section {
+        justify-content: space-between;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .main-content {
+        padding: 10px;
+      }
+      
+      #addForm {
+        padding: 15px;
+      }
+      
+      .form-row input,
+      .form-row select {
+        padding: 10px 12px;
+      }
+    }
+    
+    /* Fix for month input */
+    input[type="month"] {
+      min-height: 46px;
+    }
+    
+    input[type="number"] {
+      min-height: 46px;
+    }
+    
+    /* Ensure no horizontal scroll */
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+    }
+    
+    /* Sidebar adjustments */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 250px;
+      z-index: 1000;
+      overflow-y: auto;
+    }
+    
+    small {
+      font-size: 11px;
+      color: #6c757d;
+      margin-top: 3px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+    <a href="dashboard.html">DASHBOARD</a>
+    <a href="onTheWay.html">On The Way</a>
+    <a href="stock.html">STOCK</a>
+    <a href="reserved.html">RESERVED</a>
+    <a href="repossessed.html">REPOSSESSED</a>
+    <a href="sold.html">SOLD</a>
+    <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+    <a href="logbooks.html">LOGBOOKS</a>
+    <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="form-container">
+      <form id="addForm">
+        <!-- TOP TOGGLE BAR -->
+        <div class="top-toggle-bar">
+          <div class="mode-badge" id="modeBadge">📦 IN STOCK MODE</div>
+          <div class="toggle-section">
+            <span class="toggle-label">ON THE WAY MODE</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="pendingToggle">
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label" id="pendingToggleLabel">OFF</span>
+          </div>
+          <div class="info-hint">
+            <i>ℹ️</i> Toggle between IN STOCK and ON THE WAY modes
+          </div>
+        </div>
+
+        <!-- Row 1: Dynamic based on mode -->
+        <div class="form-row" id="row1">
+          <!-- Stock Mode Fields (visible in stock mode) -->
+          <div id="stockReceivingDate">
+            <label for="receivingDate" class="required">RECEIVING DATE</label>
+            <input id="receivingDate" type="date" required>
+            <small>Can select today or past dates only</small>
+          </div>
+          <div id="stockSupplier">
+            <label for="supplier" class="required">SUPPLIER</label>
+            <select id="supplier" required></select>
+          </div>
+          
+          <!-- On The Way Mode Fields (visible in on the way mode) -->
+          <div id="onwayShipmentDate" style="display: none;">
+            <label for="shipmentDate" class="required">SHIPMENT DATE</label>
+            <input id="shipmentDate" type="date">
+            <small>Can select today or future dates only</small>
+          </div>
+          <div id="onwayShipName" style="display: none;">
+            <label for="shipName" class="required">VESSEL / SHIP NAME</label>
+            <select id="shipName">
+              <option value="">SELECT VESSEL</option>
+            </select>
+            <small>Name of the vessel carrying the vehicle</small>
+          </div>
+          <div id="onwaySupplier" style="display: none;">
+            <label for="supplierOnWay" class="required">SUPPLIER</label>
+            <select id="supplierOnWay" required></select>
+          </div>
+        </div>
+
+        <!-- Row 2: Consignee, Chassis, Engine -->
+        <div class="form-row">
+          <div>
+            <label for="consignee" class="required">CONSIGNEE</label>
+            <select id="consignee" required></select>
+            <small>Receiver of the vehicle</small>
+          </div>
+
+          <div>
+            <label for="chassis" class="required">CHASSIS NUMBER</label>
+            <input id="chassis" required placeholder="ENTER CHASSIS NUMBER">
+            <small>Unique chassis identifier</small>
+          </div>
+
+          <div>
+            <label for="engine" class="required">ENGINE NUMBER</label>
+            <input id="engine" required placeholder="ENTER ENGINE NUMBER">
+            <small>Unique engine identifier</small>
+          </div>
+        </div>
+
+        <!-- Row 3: Brand, Model, Year -->
+        <div class="form-row">
+          <div>
+            <label for="brand" class="required">BRAND</label>
+            <select id="brand" required></select>
+          </div>
+
+          <div>
+            <label for="model" class="required">MODEL</label>
+            <select id="model" required></select>
+          </div>
+
+          <div>
+            <label for="modelYear" class="required" id="modelYearLabel">MODEL YEAR/MONTH</label>
+            <input id="modelYear" type="month" required>
+            <small id="modelYearHint">Select year and month</small>
+          </div>
+        </div>
+
+        <!-- Row 4: CC, Package, Color -->
+        <div class="form-row">
+          <div>
+            <label for="cc" class="required">CC</label>
+            <select id="cc" required></select>
+            <small>Engine capacity</small>
+          </div>
+
+          <div>
+            <label for="package">PACKAGE</label>
+            <select id="package">
+              <option value="STANDARD">STANDARD</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="color" class="required">COLOR</label>
+            <select id="color" required></select>
+          </div>
+        </div>
+
+        <!-- Row 5: Fuel, Shift, Drive -->
+        <div class="form-row">
+          <div>
+            <label for="fuel" class="required">FUEL</label>
+            <select id="fuel" required>
+              <option value="">SELECT FUEL</option>
+              <option value="PETROL">PETROL</option>
+              <option value="DIESEL">DIESEL</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="shift" class="required">SHIFT</label>
+            <select id="shift" required>
+              <option value="">SELECT SHIFT</option>
+              <option value="AUTO">AUTO</option>
+              <option value="MANUAL">MANUAL</option>
+              <option value="DUAL">DUAL</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="drive" class="required">DRIVE</label>
+            <select id="drive" required>
+              <option value="">SELECT DRIVE</option>
+              <option value="2WD">2WD</option>
+              <option value="4WD">4WD</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 6: Mileage, Location, Remarks -->
+        <div class="form-row">
+          <div>
+            <label for="milage" class="required">MILEAGE</label>
+            <input id="milage" type="number" min="0" step="1" required placeholder="ENTER MILEAGE">
+            <small>Current mileage in km</small>
+          </div>
+
+          <div>
+            <label for="location" class="required">LOCATION</label>
+            <select id="location" required>
+              <option value="">SELECT LOCATION</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="remarks">REMARKS</label>
+            <input id="remarks" placeholder="OPTIONAL REMARKS">
+          </div>
+        </div>
+
+        <!-- Row 7: Registration, Logbook -->
+        <div class="form-row">
+          <div>
+            <label for="regno">REGISTRATION NUMBER</label>
+            <input id="regno" placeholder="ABC 123D" maxlength="8">
+            <small>Format: ABC 123D</small>
+          </div>
+
+          <div>
+            <label for="logbook">LOGBOOK</label>
+            <input id="logbook" placeholder="OPTIONAL LOGBOOK INFO">
+          </div>
+          <div></div>
+        </div>
+
+        <button type="submit" id="submitBtn">
+          <span id="submitText">ADD VEHICLE</span>
+          <span id="submitSpinner" class="spinner" style="display: none;"></span>
+        </button>
+      </form>
+
+      <div id="status"></div>
+    </div>
+  </div>
+
+<script type="module">
+import { db, ref, set, get, onValue, push } from '../firebase.js';
+
+const brandSelect = document.getElementById('brand');
+const modelSelect = document.getElementById('model');
+const ccSelect = document.getElementById('cc');
+const colorSelect = document.getElementById('color');
+const supplierSelect = document.getElementById('supplier');
+const supplierOnWaySelect = document.getElementById('supplierOnWay');
+const consigneeSelect = document.getElementById('consignee');
+const packageSelect = document.getElementById('package');
+const locationSelect = document.getElementById('location');
+const fuelSelect = document.getElementById('fuel');
+const shiftSelect = document.getElementById('shift');
+const driveSelect = document.getElementById('drive');
+const pendingToggle = document.getElementById('pendingToggle');
+const pendingToggleLabel = document.getElementById('pendingToggleLabel');
+const shipNameSelect = document.getElementById('shipName');
+const modeBadge = document.getElementById('modeBadge');
+
+const form = document.getElementById('addForm');
+const status = document.getElementById('status');
+const receivingDate = document.getElementById('receivingDate');
+const shipmentDate = document.getElementById('shipmentDate');
+const regInput = document.getElementById('regno');
+const chassisInput = document.getElementById('chassis');
+const engineInput = document.getElementById('engine');
+const modelYearInput = document.getElementById('modelYear');
+const modelYearLabel = document.getElementById('modelYearLabel');
+const modelYearHint = document.getElementById('modelYearHint');
+const mileageInput = document.getElementById('milage');
+const remarksInput = document.getElementById('remarks');
+const logbookInput = document.getElementById('logbook');
+const submitBtn = document.getElementById('submitBtn');
+const submitText = document.getElementById('submitText');
+const submitSpinner = document.getElementById('submitSpinner');
+
+// Containers for row 1
+const stockReceivingDate = document.getElementById('stockReceivingDate');
+const stockSupplier = document.getElementById('stockSupplier');
+const onwayShipmentDate = document.getElementById('onwayShipmentDate');
+const onwayShipName = document.getElementById('onwayShipName');
+const onwaySupplier = document.getElementById('onwaySupplier');
+
+let brands = {};
+let maxVehicleId = 0;
+
+function applyFieldEnableDisable(isOnTheWay) {
+  const today = new Date().toISOString().split('T')[0];
+  const currentYear = new Date().getFullYear();
+  
+  if (isOnTheWay) {
+    // ON THE WAY MODE - Show shipment date, vessel, supplier (onway)
+    stockReceivingDate.style.display = 'none';
+    stockSupplier.style.display = 'none';
+    onwayShipmentDate.style.display = 'block';
+    onwayShipName.style.display = 'block';
+    onwaySupplier.style.display = 'block';
+    
+    // Change Model Year field to just YEAR (number input)
+    modelYearLabel.innerHTML = 'MODEL YEAR <span style="color:#dc3545;">*</span>';
+    modelYearHint.innerHTML = 'Enter only the year (e.g., 2023)';
+    modelYearInput.type = 'number';
+    modelYearInput.min = '2000';
+    modelYearInput.max = currentYear.toString();
+    modelYearInput.placeholder = 'ENTER YEAR';
+    modelYearInput.value = currentYear.toString();
+    
+    
+    // Set shipment date defaults
+    if (!shipmentDate.value) {
+      shipmentDate.value = today;
+    }
+    shipmentDate.min = '2000-01-01';  // Change this line - allow past dates
+    shipmentDate.max = '';             // No max limit, can select future dates
+    shipmentDate.required = true;
+    shipNameSelect.required = true;
+    supplierOnWaySelect.required = true;
+    
+    // Enable fields for ON THE WAY mode - EXCLUDING cc, fuel, shift, drive
+    const enabledFields = [
+      shipmentDate, shipNameSelect, supplierOnWaySelect, 
+      brandSelect, modelSelect, chassisInput, modelYearInput, colorSelect
+    ];
+    const disabledFields = [
+      receivingDate, supplierSelect, consigneeSelect, engineInput, 
+      packageSelect, mileageInput, locationSelect, remarksInput, regInput, logbookInput,
+      ccSelect, fuelSelect, shiftSelect, driveSelect  // DISABLE these 4
+    ];
+    
+    enabledFields.forEach(field => { if (field) field.disabled = false; });
+    disabledFields.forEach(field => { if (field) field.disabled = true; });
+    
+    // Update UI
+    modeBadge.innerHTML = '🚢 ON THE WAY MODE';
+    modeBadge.style.background = '#ffc107';
+    modeBadge.style.color = '#2c3e50';
+    
+  } else {
+    // IN STOCK MODE - Show receiving date and supplier
+    stockReceivingDate.style.display = 'block';
+    stockSupplier.style.display = 'block';
+    onwayShipmentDate.style.display = 'none';
+    onwayShipName.style.display = 'none';
+    onwaySupplier.style.display = 'none';
+    
+    // Change Model Year field back to MONTH input
+    modelYearLabel.innerHTML = 'MODEL YEAR/MONTH <span style="color:#dc3545;">*</span>';
+    modelYearHint.innerHTML = 'Select year and month';
+    modelYearInput.type = 'month';
+    modelYearInput.min = '2000-01';
+    const currentMonth = `${currentYear}-${String(new Date().getMonth() + 1).padStart(2,'0')}`;
+    modelYearInput.max = currentMonth;
+    modelYearInput.value = currentMonth;
+    modelYearInput.placeholder = '';
+    
+    // Set receiving date defaults
+    receivingDate.max = today;
+    receivingDate.min = '2000-01-01';
+    if (!receivingDate.value || receivingDate.value > today) {
+      receivingDate.value = today;
+    }
+    receivingDate.required = true;
+    supplierSelect.required = true;
+    shipmentDate.required = false;
+    shipNameSelect.required = false;
+    supplierOnWaySelect.required = false;
+    
+    // Enable all fields for IN STOCK mode
+    const allFields = [
+      receivingDate, supplierSelect, consigneeSelect, chassisInput, engineInput, 
+      brandSelect, modelSelect, modelYearInput, ccSelect, packageSelect, colorSelect, 
+      fuelSelect, shiftSelect, driveSelect, mileageInput, locationSelect, 
+      remarksInput, regInput, logbookInput
+    ];
+    allFields.forEach(field => { if (field) field.disabled = false; });
+    
+    // Update UI
+    modeBadge.innerHTML = '📦 IN STOCK MODE';
+    modeBadge.style.background = '#2c3e50';
+    modeBadge.style.color = 'white';
+  }
+}
+
+pendingToggle.addEventListener('change', function() {
+  const isOnTheWay = this.checked;
+  
+  if (isOnTheWay) {
+    pendingToggleLabel.textContent = 'ON';
+    applyFieldEnableDisable(true);
+    showStatus('🚢 ON THE WAY MODE ACTIVE: Fill Shipment Date, Vessel, Supplier, Brand, Model, Year, and Color.', 'info');
+  } else {
+    pendingToggleLabel.textContent = 'OFF';
+    applyFieldEnableDisable(false);
+    showStatus('📦 IN STOCK MODE: All fields are editable.', 'info');
+  }
+});
+
+// Load supplier data for both selects
+onValue(ref(db, 'essentials/supplier'), snap => {
+  const data = snap.val() || {};
+  const suppliers = Object.values(data).map(v => v.name || v).filter(n => n).sort();
+  
+  // Populate both supplier selects
+  [supplierSelect, supplierOnWaySelect].forEach(sel => {
+    sel.innerHTML = '<option value="">SELECT SUPPLIER</option>';
+    suppliers.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name.toUpperCase();
+      sel.appendChild(opt);
+    });
+  });
+});
+
+async function getNextVehicleId() {
+  try {
+    if (maxVehicleId > 0) {
+      const nextId = maxVehicleId + 1;
+      setTimeout(async () => {
+        try {
+          await set(ref(db, 'counters/vehicleId'), nextId);
+        } catch(e) {}
+      }, 0);
+      return nextId.toString();
+    }
+    
+    const counterRef = ref(db, 'counters/vehicleId');
+    const counterSnap = await get(counterRef);
+    
+    if (counterSnap.exists()) {
+      const counterValue = counterSnap.val();
+      maxVehicleId = counterValue;
+      const nextId = counterValue + 1;
+      await set(counterRef, nextId);
+      return nextId.toString();
+    }
+    
+    const vehiclesSnap = await get(ref(db, 'vehicles'));
+    const vehicles = vehiclesSnap.val() || {};
+    
+    let maxId = 0;
+    Object.keys(vehicles).forEach(id => {
+      const numId = parseInt(id, 10);
+      if (!isNaN(numId) && numId > maxId) maxId = numId;
+    });
+    
+    maxVehicleId = maxId;
+    const nextId = maxId + 1;
+    await set(counterRef, nextId);
+    return nextId.toString();
+  } catch (error) {
+    console.error('Error getting next ID:', error);
+    return Date.now().toString();
+  }
+}
+
+function showStatus(message, type = 'info') {
+  status.textContent = message;
+  status.className = type;
+  status.style.display = 'flex';
+  
+  if (type === 'success') {
+    status.style.backgroundColor = '#d4edda';
+    status.style.color = '#155724';
+    status.style.border = '1px solid #c3e6cb';
+  } else if (type === 'error') {
+    status.style.backgroundColor = '#f8d7da';
+    status.style.color = '#721c24';
+    status.style.border = '1px solid #f5c6cb';
+  } else if (type === 'loading') {
+    status.style.backgroundColor = '#d1ecf1';
+    status.style.color = '#0c5460';
+    status.style.border = '1px solid #bee5eb';
+  }
+}
+
+function showLoading(show) {
+  if (show) {
+    submitBtn.disabled = true;
+    submitText.textContent = 'SAVING...';
+    submitSpinner.style.display = 'inline-block';
+    showStatus('Saving vehicle details...', 'loading');
+  } else {
+    submitBtn.disabled = false;
+    submitText.textContent = 'ADD VEHICLE';
+    submitSpinner.style.display = 'none';
+  }
+}
+
+async function initializeMaxId() {
+  try {
+    const counterRef = ref(db, 'counters/vehicleId');
+    const counterSnap = await get(counterRef);
+    if (counterSnap.exists()) {
+      maxVehicleId = counterSnap.val();
+    } else {
+      const vehiclesSnap = await get(ref(db, 'vehicles'));
+      const vehicles = vehiclesSnap.val() || {};
+      let maxId = 0;
+      Object.keys(vehicles).forEach(id => {
+        const numId = parseInt(id, 10);
+        if (!isNaN(numId) && numId > maxId) maxId = numId;
+      });
+      maxVehicleId = maxId;
+      await set(counterRef, maxId + 1);
+    }
+  } catch (error) {
+    console.error('Error initializing max ID:', error);
+  }
+}
+
+// Auto-format registration input
+if (regInput) {
+  regInput.addEventListener('input', (e) => {
+    const raw = (e.target.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,7);
+    const formatted = raw.length > 3 ? raw.slice(0,3) + ' ' + raw.slice(3) : raw;
+    e.target.value = formatted;
+  });
+}
+
+// Set default dates
+const today = new Date().toISOString().split('T')[0];
+receivingDate.value = today;
+receivingDate.max = today;
+receivingDate.min = '2000-01-01';
+
+// Load data from Firebase
+onValue(ref(db, 'essentials/brand'), snap => {
+  brands = snap.val() || {};
+  brandSelect.innerHTML = '<option value="">SELECT BRAND</option>';
+  Object.values(brands).map(b => b.name).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name.toUpperCase();
+    brandSelect.appendChild(opt);
+  });
+  modelSelect.innerHTML = '<option value="">SELECT MODEL</option>';
+  ccSelect.innerHTML = '<option value="">SELECT CC</option>';
+});
+
+onValue(ref(db, 'essentials/ship_name'), snap => {
+  shipNameSelect.innerHTML = '<option value="">SELECT VESSEL</option>';
+  const data = snap.val() || {};
+  Object.values(data).map(item => item.name || item).filter(n => n && n.trim()).sort().forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name.toUpperCase();
+    shipNameSelect.appendChild(opt);
+  });
+});
+
+[['color', colorSelect], ['consignee', consigneeSelect], ['location', locationSelect]].forEach(([key, sel]) => {
+  onValue(ref(db, `essentials/${key}`), snap => {
+    sel.innerHTML = `<option value="">SELECT ${key.toUpperCase()}</option>`;
+    const data = snap.val() || {};
+    Object.values(data).map(v => v.name || v).filter(n => n).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name.toUpperCase();
+      sel.appendChild(opt);
+    });
+  });
+});
+
+brandSelect.addEventListener('change', () => {
+  const brandName = brandSelect.value;
+  modelSelect.innerHTML = '<option value="">SELECT MODEL</option>';
+  ccSelect.innerHTML = '<option value="">SELECT CC</option>';
+  packageSelect.innerHTML = '<option value="STANDARD">STANDARD</option>';
+  if (!brandName) return;
+  const brand = Object.values(brands).find(b => b.name === brandName);
+  if (brand && brand.models) {
+    Object.keys(brand.models).sort().forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m.toUpperCase();
+      modelSelect.appendChild(opt);
+    });
+  }
+});
+
+modelSelect.addEventListener('change', async () => {
+  const brandName = brandSelect.value;
+  const modelName = modelSelect.value;
+  ccSelect.innerHTML = '<option value="">SELECT CC</option>';
+  if (!brandName || !modelName) return;
+  try {
+    const modelSnap = await get(ref(db, `essentials/model/${modelName}/cc`));
+    if (modelSnap.exists()) {
+      const ccs = modelSnap.val() || {};
+      Object.keys(ccs).sort((a,b)=>Number(a)-Number(b)).forEach(cc => {
+        const opt = document.createElement('option');
+        opt.value = cc;
+        opt.textContent = cc;
+        ccSelect.appendChild(opt);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading CC:', error);
+  }
+});
+
+// FORM SUBMISSION
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  showLoading(true);
+
+  try {
+    const isPending = pendingToggle.checked;
+    const todayDate = new Date().toISOString().split('T')[0];
+    
+    const chassis = chassisInput.value.trim().toUpperCase();
+    const engine = engineInput.value.trim().toUpperCase();
+    const brand = brandSelect.value.trim().toUpperCase();
+    const model = modelSelect.value.trim().toUpperCase();
+    const color = colorSelect.value.trim().toUpperCase();
+    const remarks = remarksInput.value.trim().toUpperCase() || null;
+    const regno = regInput.value.trim().toUpperCase() || null;
+    const logbook = logbookInput.value.trim().toUpperCase() || null;
+    
+    let supplier = null;
+    let consignee = null;
+    let dateValue = null;
+    let shipName = null;
+    let cc = null;
+    let fuel = null;
+    let shift = null;
+    let drive = null;
+    let modelYear = null;
+    
+    if (isPending) {
+      // ON THE WAY MODE validation - ONLY required fields (CC, Fuel, Shift, Drive NOT required)
+      shipName = shipNameSelect.value.trim().toUpperCase();
+      supplier = supplierOnWaySelect.value.trim().toUpperCase();
+      dateValue = shipmentDate.value;
+      const yearValue = modelYearInput.value;
+      
+      if (!yearValue) {
+        showStatus('Model Year is required', 'error');
+        showLoading(false);
+        modelYearInput.focus();
+        return;
+      }
+      
+      // Format year as YYYY-01 for storage (first month of the year)
+      modelYear = `${yearValue}-01`;
+      
+      if (!shipName) {
+        showStatus('Vessel / Ship Name is required', 'error');
+        showLoading(false);
+        shipNameSelect.focus();
+        return;
+      }
+      if (!supplier) {
+        showStatus('Supplier is required', 'error');
+        showLoading(false);
+        supplierOnWaySelect.focus();
+        return;
+      }
+      if (!dateValue) {
+        showStatus('Shipment date is required', 'error');
+        showLoading(false);
+        shipmentDate.focus();
+        return;
+      }
+      if (dateValue < todayDate) {
+        showStatus('Shipment date cannot be in the past. Select today or future.', 'error');
+        showLoading(false);
+        shipmentDate.focus();
+        return;
+      }
+      if (!brand) { showStatus('Brand is required', 'error'); showLoading(false); return; }
+      if (!model) { showStatus('Model is required', 'error'); showLoading(false); return; }
+      if (!chassis) { showStatus('Chassis Number is required', 'error'); showLoading(false); return; }
+      if (!color) { showStatus('Color is required', 'error'); showLoading(false); return; }
+      
+      // CC, Fuel, Shift, Drive are NOT required in ON THE WAY mode
+      // Set them to null
+      cc = null;
+      fuel = null;
+      shift = null;
+      drive = null;
+      
+    } else {
+      // IN STOCK MODE validation
+      supplier = supplierSelect.value.trim().toUpperCase();
+      consignee = consigneeSelect.value.trim().toUpperCase();
+      cc = ccSelect.value;
+      fuel = fuelSelect.value.trim().toUpperCase();
+      shift = shiftSelect.value.trim().toUpperCase();
+      drive = driveSelect.value.trim().toUpperCase();
+      const location = locationSelect.value.trim().toUpperCase();
+      const mileage = Number(mileageInput.value);
+      dateValue = receivingDate.value;
+      modelYear = modelYearInput.value;
+      
+      if (!dateValue || dateValue > todayDate) {
+        showStatus('Receiving date must be today or past', 'error');
+        showLoading(false);
+        return;
+      }
+      if (!supplier) { showStatus('Supplier required', 'error'); showLoading(false); return; }
+      if (!consignee) { showStatus('Consignee required', 'error'); showLoading(false); return; }
+      if (!chassis) { showStatus('Chassis required', 'error'); showLoading(false); return; }
+      if (!engine) { showStatus('Engine required', 'error'); showLoading(false); return; }
+      if (!brand) { showStatus('Brand required', 'error'); showLoading(false); return; }
+      if (!model) { showStatus('Model required', 'error'); showLoading(false); return; }
+      if (!modelYear) { showStatus('Model Year/Month required', 'error'); showLoading(false); return; }
+      if (!cc) { showStatus('CC required', 'error'); showLoading(false); return; }
+      if (!color) { showStatus('Color required', 'error'); showLoading(false); return; }
+      if (!fuel) { showStatus('Fuel required', 'error'); showLoading(false); return; }
+      if (!shift) { showStatus('Shift required', 'error'); showLoading(false); return; }
+      if (!drive) { showStatus('Drive required', 'error'); showLoading(false); return; }
+      if (!location) { showStatus('Location required', 'error'); showLoading(false); return; }
+      if (isNaN(mileage) || mileage < 0) { showStatus('Valid mileage required', 'error'); showLoading(false); return; }
+      
+      // Validate Model Year/Month for IN STOCK mode
+      const now = new Date();
+      const currentYm = new Date(now.getFullYear(), now.getMonth(), 1);
+      const selectedYm = new Date(modelYear + "-01");
+      if (selectedYm > currentYm) {
+        showStatus('Model Year/Month cannot be in the future', 'error');
+        showLoading(false);
+        return;
+      }
+    }
+    
+    const nextId = await getNextVehicleId();
+    
+    const vehicleData = {
+      id: nextId,
+      chassis: chassis,
+      brand: brand,
+      model: model,
+      modelYearMonth: modelYear,
+      year: modelYear.split('-')[0],
+      color: color,
+      status: isPending ? "pending" : "available",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      remarks: remarks,
+      regno: regno,
+      logbook: logbook,
+      supplier: supplier,
+      cc: cc,
+      fuel: fuel,
+      shift: shift,
+      drive: drive
+    };
+    
+    if (isPending) {
+      vehicleData.shipmentDate = dateValue;
+      vehicleData.shipName = shipName;
+      vehicleData.receivingDate = null;
+      vehicleData.consignee = null;
+      vehicleData.engine = null;
+      vehicleData.mileage = null;
+      vehicleData.location = null;
+      vehicleData.package = null;
+    } else {
+      vehicleData.receivingDate = dateValue;
+      vehicleData.consignee = consignee;
+      vehicleData.engine = engine;
+      vehicleData.mileage = Number(mileageInput.value);
+      vehicleData.location = locationSelect.value.trim().toUpperCase();
+      vehicleData.package = packageSelect.value.toUpperCase();
+      vehicleData.shipmentDate = null;
+      vehicleData.shipName = null;
+      
+      const lockedFields = {};
+      if (vehicleData.regno) lockedFields.regno = true;
+      if (vehicleData.logbook) lockedFields.logbook = true;
+      vehicleData.lockedFields = lockedFields;
+    }
+    
+    await set(ref(db, `vehicles/${nextId}`), vehicleData);
+    
+    if (isPending) {
+      const onTheWayData = {
+        vehicleId: nextId,
+        chassis: chassis,
+        brand: brand,
+        model: model,
+        year: modelYear.split('-')[0],
+        color: color,
+        shipName: shipName,
+        shipmentDate: dateValue,
+        supplier: supplier,
+        status: "pending",
+        addedAt: Date.now()
+      };
+      const onTheWayRef = push(ref(db, 'onTheWay'));
+      await set(onTheWayRef, onTheWayData);
+    }
+    
+    maxVehicleId = parseInt(nextId);
+    
+    let message = `✅ Vehicle added successfully with ID: ${nextId}. `;
+    if (isPending) {
+      message += `Marked as ON THE WAY. Vessel: ${shipName}, Shipment Date: ${dateValue}`;
+    } else {
+      message += `Added to Available Stock.`;
+    }
+    
+    showStatus(message, 'success');
+    
+    setTimeout(() => {
+      if (isPending) {
+        window.location.href = 'onTheWay.html';
+      } else {
+        window.location.href = 'stock.html';
+      }
+    }, 1500);
+    
+  } catch (error) {
+    console.error('Save error:', error);
+    showStatus('❌ Error saving vehicle: ' + (error.message || 'Please try again'), 'error');
+  } finally {
+    showLoading(false);
+  }
+});
+
+// Set default month for IN STOCK mode
+const now = new Date();
+const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2,'0')}`;
+modelYearInput.value = currentMonth;
+modelYearInput.min = '2000-01';
+modelYearInput.max = currentMonth;
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeMaxId();
+  applyFieldEnableDisable(false);
+  showStatus('Ready to add new vehicle. Toggle ON THE WAY mode to add vehicles in transit.', 'info');
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,2576 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Sold Vehicles</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <style>
+    /* STOCK PAGE EXACT STYLING */
+    .model-name-red {
+      color: red;
+      font-weight: bold;
+    }
+    
+    .highlight-search {
+      background: yellow;
+      font-weight: bold;
+      padding: 2px;
+    }
+
+    #soldList {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .vehicle-box {
+      display: flex;
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 8px;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    
+    .vehicle-details {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 14px;
+      width: 100%;
+    }
+    
+    .vehicle-details strong {
+      font-size: 16px;
+      color: #222;
+    }
+    
+    .vehicle-info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px 10px;
+    }
+
+    .vehicle-info-grid div {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Consignee dropdown styling */
+    .consignee-select {
+      padding: 2px 4px;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background: white;
+      width: 180px;
+      max-width: 100%;
+    }
+    
+    .consignee-select:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    .consignee-select option {
+      padding: 2px;
+    }
+    
+    .consignee-container {
+      display: inline-block;
+      margin-left: 5px;
+    }
+
+    .vehicle-actions {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    
+    .vehicle-actions button {
+      padding: 4px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .search-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    #findBtn {
+      padding: 1px 2px;
+      background-color: #9b9c9e;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      height: 20px;
+    }
+    
+    #findBtn:hover {
+      background-color: #9b9c9e;
+    }
+    
+    #findBtn.date-filter-active {
+      background-color: #28a745;
+    }
+    
+    #findBtn.date-filter-active:hover {
+      background-color: #218838;
+    }
+
+    /* Expiry Check Button Styles */
+    #expiryCheckBtn {
+      padding: 6px 15px;
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    
+    #expiryCheckBtn:hover {
+      background-color: #ff5252;
+    }
+    
+    #expiryCheckBtn.expiry-filter-active {
+      background-color: #dc3545;
+      box-shadow: 0 0 0 2px rgba(220,53,69,0.25);
+    }
+    
+    #searchBar {
+      padding: 6px 10px;
+      font-size: 14px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    /* Download Button Styles */
+    #downloadBtn {
+      padding: 6px 15px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    
+    #downloadBtn:hover {
+      background-color: #218838;
+    }
+    
+    /* Download Popup Styles */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10002;
+    }
+    
+    .popup-content {
+      background: white;
+      border-radius: 8px;
+      width: 400px;
+      max-width: 90%;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .popup-content h3 {
+      margin-top: 0;
+      color: #2c3e50;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+    
+    .download-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    
+    .download-options button {
+      padding: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    #downloadPDF {
+      background-color: #dc3545;
+    }
+    
+    #downloadPDF:hover {
+      background-color: #c82333;
+    }
+    
+    #downloadExcel {
+      background-color: #28a745;
+    }
+    
+    #downloadExcel:hover {
+      background-color: #218838;
+    }
+    
+    #cancelDownload {
+      background-color: #6c757d;
+    }
+    
+    #cancelDownload:hover {
+      background-color: #5a6268;
+    }
+    
+    /* Date Filter Popup Styles */
+    .month-year-input-group {
+      margin-bottom: 15px;
+    }
+    
+    .month-year-input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    
+    .month-year-input-group select,
+    .month-year-input-group input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .month-year-input-group select:focus,
+    .month-year-input-group input[type="number"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    .month-year-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    .month-year-actions button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .month-year-actions .apply-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .month-year-actions .apply-btn:hover {
+      background-color: #218838;
+    }
+    
+    .month-year-actions .clear-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    
+    .month-year-actions .clear-btn:hover {
+      background-color: #c82333;
+    }
+    
+    .month-year-actions .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .month-year-actions .cancel-btn:hover {
+      background-color: #5a6268;
+    }
+    
+    /* Active filters indicator */
+    #activeFilters {
+      margin: 10px 0;
+      display: none;
+    }
+    
+    #activeFilters span {
+      background-color: #e9ecef;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: inline-block;
+    }
+    
+    #clearAllFilters {
+      margin-left: 10px;
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    /* Custom Alert Dialog Styles */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .alert-content {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .alert-title {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .alert-message {
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .alert-button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+    }
+    
+    .alert-button:hover {
+      background: #0056b3;
+    }
+    
+    /* Password Popup Styles */
+    #passwordPopup .popup-content {
+      width: 350px;
+    }
+    
+    .password-input-group {
+      margin: 20px 0;
+    }
+    
+    .password-input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    
+    .password-input-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .password-input-group input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    .password-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+    
+    .password-actions button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .password-actions .submit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    
+    .password-actions .submit-btn:hover {
+      background-color: #0056b3;
+    }
+    
+    .password-actions .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .password-actions .cancel-btn:hover {
+      background-color: #5a6268;
+    }
+    
+    .error-message {
+      color: #dc3545;
+      font-size: 13px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    /* Status styling for SOLD */
+    .status-sold {
+      background-color: #cce5ff !important;
+      color: #004085;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    /* Expiry highlight styling */
+    .expiry-highlight {
+      background-color: #ffeb3b !important;
+      font-weight: bold;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    /* Buyer/Insurance info styling */
+    .buyer-section {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .buyer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .buyer-grid div {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .buyer-label {
+      color: #666;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    
+    .insurance-section {
+      margin-top: 8px;
+      padding: 10px;
+      background: #e8f4f8;
+      border-radius: 4px;
+      border: 1px solid #b3e0f2;
+    }
+    
+    .insurance-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    /* Editable date styles */
+    .editable-date {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+    }
+    
+    .editable-date:hover {
+      background-color: #e9ecef;
+    }
+    
+    .date-edit-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .date-edit-container input[type="date"] {
+      padding: 4px;
+      border: 1px solid #007bff;
+      border-radius: 4px;
+      font-size: 12px;
+      width: 140px;
+    }
+    
+    .date-edit-container button {
+      padding: 4px 8px;
+      font-size: 11px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      background-color: #28a745;
+      color: white;
+    }
+    
+    .date-edit-container button.cancel {
+      background-color: #dc3545;
+    }
+    
+    /* Clear search button */
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    .search-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+    
+    #clearSearch {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-weight: bold;
+      display: none;
+    }
+    
+    /* Edit popup styles */
+    .edit-popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10001;
+    }
+    
+    .edit-popup-content {
+      background: white;
+      border-radius: 8px;
+      width: 400px;
+      max-width: 90%;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .edit-popup h3 {
+      margin-top: 0;
+      color: #2c3e50;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+    
+    .edit-form-group {
+      margin-bottom: 15px;
+    }
+    
+    .edit-form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #34495e;
+    }
+    
+    .edit-form-group input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    
+    .edit-form-group input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    
+    .edit-popup-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .edit-popup-buttons button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .edit-save-btn {
+      background: #2ecc71;
+      color: white;
+    }
+    
+    .edit-save-btn:hover {
+      background: #27ae60;
+    }
+    
+    .edit-cancel-btn {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .edit-cancel-btn:hover {
+      background: #c0392b;
+    }
+    
+    /* Pagination styles */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-top: 2px solid #e0e0e0;
+      margin-top: 20px;
+    }
+    
+    .page-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .page-btn {
+      padding: 8px 15px;
+      background: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    
+    .page-btn:hover:not(:disabled) {
+      background: #34495e;
+    }
+    
+    .page-btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+    
+    .page-info {
+      background: white;
+      padding: 8px 15px;
+      border-radius: 4px;
+      border: 1px solid #2c3e50;
+      font-weight: 600;
+      font-size: 13px;
+      min-width: 250px;
+      text-align: center;
+    }
+    
+    .page-info .highlight {
+      color: #e74c3c;
+      font-weight: 700;
+    }
+    
+    .items-per-page {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .items-per-page select {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      font-size: 13px;
+    }
+    
+    .items-per-page label {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    
+    .jump-to-page {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    
+    .jump-to-page input {
+      width: 50px;
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 13px;
+    }
+    
+    .jump-to-page button {
+      padding: 6px 12px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    /* Loading indicator */
+    .saving-indicator {
+      font-size: 11px;
+      color: #28a745;
+      margin-left: 5px;
+      font-style: italic;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .buyer-grid,
+      .insurance-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .pagination-container {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .edit-popup-content {
+        width: 90%;
+        margin: 20px;
+      }
+      
+      .vehicle-actions {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .vehicle-actions button {
+        width: 100%;
+        margin-bottom: 5px;
+      }
+      
+      .consignee-select {
+        width: 120px;
+      }
+      
+      .search-container {
+        flex-wrap: wrap;
+      }
+    }
+    .insurance-agent-select {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: white;
+  width: 180px;
+  max-width: 100%;
+  cursor: pointer;
+}
+
+.insurance-agent-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+  </style>
+</head>
+
+<body>
+  <!-- Custom Alert Dialog -->
+  <div id="customAlert" class="custom-alert">
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">Alert</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-button" id="alertOkButton">OK</button>
+    </div>
+  </div>
+
+  <!-- Download Popup -->
+  <div id="downloadPopup" class="popup">
+    <div class="popup-content">
+      <h3>SELECT FILE TYPE</h3>
+      <div class="download-options">
+        <button id="downloadPDF">DOWNLOAD PDF</button>
+        <button id="downloadExcel">DOWNLOAD EXCEL</button>
+        <button id="cancelDownload">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Popup -->
+  <div id="passwordPopup" class="popup">
+    <div class="popup-content">
+      <!-- <h3>ENTER PASSWORD</h3> -->
+      <div class="password-input-group">
+        <label for="passwordInput"></label>
+        <input type="password" id="passwordInput" >
+        <div id="passwordError" class="error-message">Incorrect password</div>
+      </div>
+      <div class="password-actions">
+        <button id="cancelPassword" class="cancel-btn">CANCEL</button>
+        <button id="submitPassword" class="submit-btn">SUBMIT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Filter Popup -->
+  <div id="dateFilterPopup" class="popup">
+    <div class="popup-content">
+      <h3>FILTER BY SOLD DATE</h3>
+      <div class="date-input-group">
+        <label for="fromDate">FROM DATE:</label>
+        <input type="date" id="fromDate">
+      </div>
+      <div class="date-input-group">
+        <label for="toDate">TO DATE:</label>
+        <input type="date" id="toDate">
+      </div>
+      <div class="date-filter-actions">
+        <button id="clearDateFilter" class="clear-btn">CLEAR</button>
+        <button id="cancelDateFilter" class="cancel-btn">CANCEL</button>
+        <button id="applyDateFilter" class="apply-btn">APPLY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expiry Check Popup -->
+  <div id="expiryCheckPopup" class="popup">
+    <div class="popup-content">
+      <h3>CHECK EXPIRY</h3>
+      <div class="month-year-input-group">
+        <label for="expiryMonth">SELECT MONTH:</label>
+        <select id="expiryMonth">
+          <option value="1">JANUARY</option>
+          <option value="2">FEBRUARY</option>
+          <option value="3">MARCH</option>
+          <option value="4">APRIL</option>
+          <option value="5">MAY</option>
+          <option value="6">JUNE</option>
+          <option value="7">JULY</option>
+          <option value="8">AUGUST</option>
+          <option value="9">SEPTEMBER</option>
+          <option value="10">OCTOBER</option>
+          <option value="11">NOVEMBER</option>
+          <option value="12">DECEMBER</option>
+        </select>
+      </div>
+      <div class="month-year-input-group">
+        <label for="expiryYear">ENTER YEAR (YYYY):</label>
+        <input type="number" id="expiryYear" min="2000" max="2100" placeholder="e.g., 2024" required>
+      </div>
+      <div class="month-year-actions">
+        <button id="clearExpiryFilter" class="clear-btn">CLEAR</button>
+        <button id="cancelExpiryFilter" class="cancel-btn">CANCEL</button>
+        <button id="applyExpiryFilter" class="apply-btn">APPLY</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Popup Dialog -->
+  <div id="editPopup" class="edit-popup">
+    <div class="edit-popup-content">
+      <h3>Edit Vehicle Details</h3>
+      <form id="editForm">
+        <div class="edit-form-group">
+          <label for="editRegno">Registration Number:</label>
+          <input type="text" id="editRegno" placeholder="Enter registration number" maxlength="20">
+        </div>
+        <div class="edit-form-group">
+          <label for="editLogbook">Logbook Number:</label>
+          <input type="text" id="editLogbook" placeholder="Enter logbook number" maxlength="50">
+        </div>
+        <div class="edit-popup-buttons">
+          <button type="button" id="editCancelBtn" class="edit-cancel-btn">Cancel</button>
+          <button type="submit" id="editSaveBtn" class="edit-save-btn">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+    <a href="dashboard.html">DASHBOARD</a>
+    <a href="onTheWay.html">On The Way</a>
+    <a href="stock.html">STOCK</a>
+    <a href="reserved.html">RESERVED</a>
+    <a href="repossessed.html">REPOSSESSED</a>
+    <a href="sold.html" class="active">SOLD</a>
+    <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+    <a href="logbooks.html">LOGBOOKS</a> 
+    <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <div class="main-content">
+    <!-- HEADER WITH FIND BUTTON AND SEARCH -->
+    <header>
+      <div>
+        <button id="findBtn"></button>
+        <h1 style="display:inline;">SOLD VEHICLES</h1>
+        <span id="stockCount">(0)</span>
+      </div>
+      
+      <div class="search-container">
+        <button id="expiryCheckBtn">EXPIRY CHECK</button>
+        <button id="downloadBtn">DOWNLOAD</button>
+        
+        <div class="search-wrapper">
+          <input type="text" id="searchBar" placeholder="SEARCH BY ANY FIELD..." />
+          <span id="clearSearch">✕</span>
+        </div>
+      </div>
+      
+    </header>
+    
+
+    <!-- Active filters indicator -->
+    <div id="activeFilters">
+      <span>
+        <span id="filterDescription"></span>
+        <button id="clearAllFilters">✕</button>
+      </span>
+    </div>
+
+    <!-- VEHICLE LIST -->
+    <div id="soldList">
+      <p>Loading sold vehicles...</p>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-container">
+      <div class="page-controls">
+        <button id="firstPage" class="page-btn">First</button>
+        <button id="prevPage" class="page-btn">Previous</button>
+        <div class="page-info">
+          Showing <span class="highlight" id="rangeStart">1</span>-<span class="highlight" id="rangeEnd">6</span> 
+          of <span class="highlight" id="totalItems">0</span> vehicles 
+          (Page <span class="highlight" id="currentPage">1</span>/<span class="highlight" id="totalPages">1</span>)
+        </div>
+        <button id="nextPage" class="page-btn">Next</button>
+        <button id="lastPage" class="page-btn">Last</button>
+      </div>
+      
+      <div class="items-per-page">
+        <label>Show:</label>
+        <select id="itemsPerPage">
+          <option value="5">5 vehicles</option>
+          <option value="10" selected>10 vehicles</option>
+          <option value="20">20 vehicles</option>
+          <option value="50">50 vehicles</option>
+        </select>
+      </div>
+      
+      <div class="jump-to-page">
+        <label>Go to:</label>
+        <input type="number" id="gotoPage" min="1" value="1">
+        <button id="gotoPageBtn">Go</button>
+      </div>
+    </div>
+
+    <script type="module">
+      import { db, ref, onValue, get, update } from '../firebase.js';
+
+      // DOM Elements
+      const soldList = document.getElementById('soldList');
+      const stockCount = document.getElementById('stockCount');
+      const searchBar = document.getElementById('searchBar');
+      const clearSearch = document.getElementById("clearSearch");
+      
+      // Find Button and Popup Elements
+      const findBtn = document.getElementById('findBtn');
+      const passwordPopup = document.getElementById('passwordPopup');
+      const dateFilterPopup = document.getElementById('dateFilterPopup');
+      const passwordInput = document.getElementById('passwordInput');
+      const passwordError = document.getElementById('passwordError');
+      const submitPassword = document.getElementById('submitPassword');
+      const cancelPassword = document.getElementById('cancelPassword');
+      const fromDate = document.getElementById('fromDate');
+      const toDate = document.getElementById('toDate');
+      const applyDateFilter = document.getElementById('applyDateFilter');
+      const clearDateFilter = document.getElementById('clearDateFilter');
+      const cancelDateFilter = document.getElementById('cancelDateFilter');
+      
+      // Download Elements
+      const downloadBtn = document.getElementById('downloadBtn');
+      const downloadPopup = document.getElementById('downloadPopup');
+      const downloadPDF = document.getElementById('downloadPDF');
+      const downloadExcel = document.getElementById('downloadExcel');
+      const cancelDownload = document.getElementById('cancelDownload');
+      
+      // Expiry Check Elements
+      const expiryCheckBtn = document.getElementById('expiryCheckBtn');
+      const expiryCheckPopup = document.getElementById('expiryCheckPopup');
+      const expiryMonth = document.getElementById('expiryMonth');
+      const expiryYear = document.getElementById('expiryYear');
+      const applyExpiryFilter = document.getElementById('applyExpiryFilter');
+      const clearExpiryFilter = document.getElementById('clearExpiryFilter');
+      const cancelExpiryFilter = document.getElementById('cancelExpiryFilter');
+      
+      const activeFilters = document.getElementById('activeFilters');
+      const filterDescription = document.getElementById('filterDescription');
+      const clearAllFilters = document.getElementById('clearAllFilters');
+      
+      // Edit Popup Elements
+      const editPopup = document.getElementById('editPopup');
+      const editForm = document.getElementById('editForm');
+      const editRegnoInput = document.getElementById('editRegno');
+      const editLogbookInput = document.getElementById('editLogbook');
+      const editCancelBtn = document.getElementById('editCancelBtn');
+      
+      // Pagination Elements
+      const firstPageBtn = document.getElementById('firstPage');
+      const prevPageBtn = document.getElementById('prevPage');
+      const nextPageBtn = document.getElementById('nextPage');
+      const lastPageBtn = document.getElementById('lastPage');
+      const currentPageSpan = document.getElementById('currentPage');
+      const totalPagesSpan = document.getElementById('totalPages');
+      const totalItemsSpan = document.getElementById('totalItems');
+      const rangeStartSpan = document.getElementById('rangeStart');
+      const rangeEndSpan = document.getElementById('rangeEnd');
+      const itemsPerPageSelect = document.getElementById('itemsPerPage');
+      const gotoPageInput = document.getElementById('gotoPage');
+      const gotoPageBtn = document.getElementById('gotoPageBtn');
+
+      // Application State
+      let soldData = [];
+      let filteredData = [];
+      let searchQuery = '';
+      let currentEditVehicleId = null;
+
+      let allInsuranceAgents = [];
+      
+      // Date Filter State
+      let fromDateFilter = '';
+      let toDateFilter = '';
+      
+      // Expiry Filter State
+      let expiryMonthFilter = null;
+      let expiryYearFilter = null;
+      
+      const REQUIRED_PASSWORD = '0808';
+      
+      // Consignee options cache
+      let allConsignees = [];
+      
+      // Pagination State
+      let currentPage = 1;
+      let itemsPerPage = parseInt(itemsPerPageSelect.value);
+      let totalPages = 1;
+      let totalItems = 0;
+
+      // Track active date edits
+      let activeDateEdit = null;
+
+      let __scrollY = 0;
+      function disableBodyScroll() {
+        __scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${__scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+      }
+      
+      function enableBodyScroll() {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, __scrollY || 0);
+      }
+
+      /* ========== ALERT/CONFIRM FUNCTIONS ========== */
+      function showAlert(message, title = "Alert") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          alert.style.display = 'flex';
+          
+          const closeAlert = () => {
+            alert.style.display = 'none';
+            resolve();
+          };
+          
+          alertOkButton.onclick = closeAlert;
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert();
+          };
+        });
+      }
+
+      function showConfirm(message, title = "Confirm") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          alertOkButton.textContent = 'OK';
+          alert.style.display = 'flex';
+          
+          const closeAlert = (result) => {
+            alert.style.display = 'none';
+            alertOkButton.textContent = 'OK';
+            resolve(result);
+          };
+          
+          alertOkButton.onclick = () => closeAlert(true);
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert(false);
+          };
+        });
+      }
+
+      /* ========== DATE FILTER FUNCTIONS ========== */
+      function parseDateForComparison(dateStr) {
+        if (!dateStr) return null;
+        
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return new Date(dateStr);
+        }
+        
+        const months = {
+          'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+          'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
+        };
+        
+        const parts = dateStr.split(' ');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0]);
+          const month = months[parts[1]];
+          const year = 2000 + parseInt(parts[2]);
+          if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+            return new Date(year, month, day);
+          }
+        }
+        
+        return null;
+      }
+
+      function isDateInRange(dateStr, fromDateStr, toDateStr) {
+        if (!dateStr || dateStr === 'N/A') return false;
+        if (!fromDateStr && !toDateStr) return true;
+        
+        const vehicleDate = parseDateForComparison(dateStr);
+        if (!vehicleDate) return true;
+        
+        vehicleDate.setHours(0, 0, 0, 0);
+        
+        if (fromDateStr && toDateStr) {
+          const from = new Date(fromDateStr);
+          from.setHours(0, 0, 0, 0);
+          const to = new Date(toDateStr);
+          to.setHours(23, 59, 59, 999);
+          return vehicleDate >= from && vehicleDate <= to;
+        } else if (fromDateStr) {
+          const from = new Date(fromDateStr);
+          from.setHours(0, 0, 0, 0);
+          return vehicleDate >= from;
+        } else if (toDateStr) {
+          const to = new Date(toDateStr);
+          to.setHours(23, 59, 59, 999);
+          return vehicleDate <= to;
+        }
+        
+        return true;
+      }
+
+      /* ========== EXPIRY CHECK FUNCTIONS ========== */
+      function parseExpiryDate(dateStr) {
+        if (!dateStr || dateStr === 'N/A') return null;
+        
+        // Try to parse displayed format (DD MMM YY)
+        const months = {
+          'JAN': 0, 'FEB': 1, 'MAR': 2, 'APR': 3, 'MAY': 4, 'JUN': 5,
+          'JUL': 6, 'AUG': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DEC': 11
+        };
+        
+        const parts = dateStr.split(' ');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0]);
+          const month = months[parts[1]];
+          const year = 2000 + parseInt(parts[2]);
+          if (!isNaN(day) && month !== undefined && !isNaN(year)) {
+            return { month: month + 1, year: year };
+          }
+        }
+        
+        // Try YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const [year, month] = dateStr.split('-').map(Number);
+          return { month, year };
+        }
+        
+        return null;
+      }
+
+      function isExpiryInMonthYear(dateStr, targetMonth, targetYear) {
+        if (!dateStr || dateStr === 'N/A') return false;
+        if (!targetMonth || !targetYear) return false;
+        
+        const expiry = parseExpiryDate(dateStr);
+        if (!expiry) return false;
+        
+        // Check if the expiry month and year match the target
+        return expiry.month === parseInt(targetMonth) && expiry.year === parseInt(targetYear);
+      }
+
+      function checkExpiry(month, year) {
+        if (!month || !year) return;
+        
+        filteredData = [...soldData];
+        
+        // Filter vehicles where insurance_expiry matches the given month and year
+        filteredData = filteredData.filter(v => {
+          const expiryDate = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
+          return isExpiryInMonthYear(expiryDate, month, year);
+        });
+        
+        totalItems = filteredData.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+        currentPage = 1;
+        
+        stockCount.textContent = `(${totalItems})`;
+        
+        // Update button style
+        if (month && year) {
+          expiryCheckBtn.classList.add('expiry-filter-active');
+        } else {
+          expiryCheckBtn.classList.remove('expiry-filter-active');
+        }
+        
+        updateActiveFiltersDisplay();
+        renderCurrentPage();
+      }
+
+      /* ========== INSURANCE DATE EDIT FUNCTIONS ========== */
+      function formatDateForInput(dateStr) {
+        if (!dateStr || dateStr === 'N/A') return '';
+        
+        // Try to parse the displayed date format (DD MMM YY)
+        const months = {
+          'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 'MAY': '05', 'JUN': '06',
+          'JUL': '07', 'AUG': '08', 'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12'
+        };
+        
+        const parts = dateStr.split(' ');
+        if (parts.length === 3) {
+          const day = parts[0].padStart(2, '0');
+          const month = months[parts[1]];
+          const year = '20' + parts[2];
+          if (month) {
+            return `${year}-${month}-${day}`;
+          }
+        }
+        
+        // If it's already YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return dateStr;
+        }
+        
+        return '';
+      }
+
+      function formatDateForDisplay(dateStr) {
+        if (!dateStr || dateStr === 'N/A' || dateStr === '') return 'N/A';
+        
+        // If it's YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+          }
+        }
+        
+        return dateStr;
+      }
+
+      async function updateInsuranceDate(vehicleId, field, newDate) {
+        try {
+          const updateData = {};
+          updateData[field] = newDate;
+          
+          await update(ref(db, `vehicles/${vehicleId}`), updateData);
+          
+          // Update local data
+          const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+          if (vehicleIndex !== -1) {
+            soldData[vehicleIndex][field] = newDate;
+          }
+          
+          // Update filtered data
+          const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+          if (filteredIndex !== -1) {
+            filteredData[filteredIndex][field] = newDate;
+          }
+          
+          await showAlert('Insurance date updated successfully!', 'Success');
+          return true;
+        } catch (err) {
+          console.error('Error updating insurance date:', err);
+          await showAlert('Failed to update insurance date. Please try again.');
+          return false;
+        }
+      }
+
+      function startDateEdit(spanElement, vehicleId, field, currentValue) {
+        // If there's already an active edit, cancel it
+        if (activeDateEdit) {
+          cancelDateEdit();
+        }
+        
+        // Store the original content and parent
+        const originalHTML = spanElement.innerHTML;
+        const originalText = spanElement.textContent;
+        
+        // Create edit container
+        const container = document.createElement('div');
+        container.className = 'date-edit-container';
+        container.style.display = 'inline-flex';
+        container.style.alignItems = 'center';
+        container.style.gap = '5px';
+        
+        const input = document.createElement('input');
+        input.type = 'date';
+        input.value = formatDateForInput(currentValue);
+        input.style.padding = '4px';
+        input.style.border = '1px solid #007bff';
+        input.style.borderRadius = '4px';
+        input.style.fontSize = '12px';
+        input.style.width = '140px';
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Save';
+        saveBtn.style.padding = '4px 8px';
+        saveBtn.style.fontSize = '11px';
+        saveBtn.style.border = 'none';
+        saveBtn.style.borderRadius = '3px';
+        saveBtn.style.cursor = 'pointer';
+        saveBtn.style.backgroundColor = '#28a745';
+        saveBtn.style.color = 'white';
+        
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.padding = '4px 8px';
+        cancelBtn.style.fontSize = '11px';
+        cancelBtn.style.border = 'none';
+        cancelBtn.style.borderRadius = '3px';
+        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.style.backgroundColor = '#dc3545';
+        cancelBtn.style.color = 'white';
+        
+        // Clear the span and add edit controls
+        spanElement.innerHTML = '';
+        spanElement.style.cursor = 'default';
+        spanElement.style.backgroundColor = '#f0f0f0';
+        container.appendChild(input);
+        container.appendChild(saveBtn);
+        container.appendChild(cancelBtn);
+        spanElement.appendChild(container);
+        
+        // Store active edit info
+        activeDateEdit = {
+          element: spanElement,
+          vehicleId,
+          field,
+          originalValue: currentValue,
+          originalHTML
+        };
+        
+        // Save button click handler
+        saveBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const newDate = input.value;
+          if (newDate) {
+            const success = await updateInsuranceDate(vehicleId, field, newDate);
+            if (success) {
+              // Update the display
+              const displayValue = formatDateForDisplay(newDate);
+              spanElement.innerHTML = displayValue;
+              spanElement.style.cursor = 'pointer';
+              spanElement.style.backgroundColor = '';
+              spanElement.className = 'editable-date';
+              spanElement.setAttribute('data-value', displayValue);
+              
+              // Update the vehicle data
+              const vehicle = soldData.find(v => v.id === vehicleId);
+              if (vehicle) {
+                vehicle[field] = newDate;
+              }
+            } else {
+              // Restore original on failure
+              spanElement.innerHTML = originalText;
+              spanElement.style.cursor = 'pointer';
+              spanElement.style.backgroundColor = '';
+              spanElement.className = 'editable-date';
+            }
+          } else {
+            // If no date selected, restore original
+            spanElement.innerHTML = originalText;
+            spanElement.style.cursor = 'pointer';
+            spanElement.style.backgroundColor = '';
+            spanElement.className = 'editable-date';
+          }
+          activeDateEdit = null;
+        };
+        
+        // Cancel button click handler
+        cancelBtn.onclick = (e) => {
+          e.stopPropagation();
+          spanElement.innerHTML = originalText;
+          spanElement.style.cursor = 'pointer';
+          spanElement.style.backgroundColor = '';
+          spanElement.className = 'editable-date';
+          activeDateEdit = null;
+        };
+        
+        // Focus the input
+        input.focus();
+      }
+
+      function cancelDateEdit() {
+        if (activeDateEdit) {
+          const { element, originalValue } = activeDateEdit;
+          element.innerHTML = formatDateForDisplay(originalValue);
+          element.style.cursor = 'pointer';
+          element.style.backgroundColor = '';
+          element.className = 'editable-date';
+          activeDateEdit = null;
+        }
+      }
+
+      /* ========== FIND BUTTON HANDLERS ========== */
+      findBtn.addEventListener('click', () => {
+        passwordInput.value = '';
+        passwordError.style.display = 'none';
+        passwordPopup.style.display = 'flex';
+        disableBodyScroll();
+      });
+
+      submitPassword.addEventListener('click', () => {
+        if (passwordInput.value === REQUIRED_PASSWORD) {
+          passwordPopup.style.display = 'none';
+          enableBodyScroll();
+          
+          if (!fromDate.value && !toDate.value) {
+            const today = new Date().toISOString().split('T')[0];
+            fromDate.value = today;
+            toDate.value = today;
+          }
+          dateFilterPopup.style.display = 'flex';
+          disableBodyScroll();
+        } else {
+          passwordError.style.display = 'block';
+          passwordInput.value = '';
+          passwordInput.focus();
+        }
+      });
+
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          submitPassword.click();
+        }
+      });
+
+      cancelPassword.addEventListener('click', () => {
+        passwordPopup.style.display = 'none';
+        enableBodyScroll();
+        passwordInput.value = '';
+        passwordError.style.display = 'none';
+      });
+
+      applyDateFilter.addEventListener('click', () => {
+        fromDateFilter = fromDate.value;
+        toDateFilter = toDate.value;
+        
+        dateFilterPopup.style.display = 'none';
+        enableBodyScroll();
+        
+        if (fromDateFilter || toDateFilter) {
+          findBtn.classList.add('date-filter-active');
+        } else {
+          findBtn.classList.remove('date-filter-active');
+        }
+        
+        // Clear expiry filter when applying date filter
+        expiryMonthFilter = null;
+        expiryYearFilter = null;
+        expiryCheckBtn.classList.remove('expiry-filter-active');
+        
+        applyFilters();
+        currentPage = 1;
+        renderCurrentPage();
+      });
+
+      clearDateFilter.addEventListener('click', () => {
+        fromDate.value = '';
+        toDate.value = '';
+        fromDateFilter = '';
+        toDateFilter = '';
+        findBtn.classList.remove('date-filter-active');
+      });
+
+      cancelDateFilter.addEventListener('click', () => {
+        dateFilterPopup.style.display = 'none';
+        enableBodyScroll();
+      });
+
+      /* ========== EXPIRY CHECK HANDLERS ========== */
+      expiryCheckBtn.addEventListener('click', () => {
+        // Set default to current month/year if not set
+        if (!expiryMonth.value || !expiryYear.value) {
+          const today = new Date();
+          expiryMonth.value = today.getMonth() + 1;
+          expiryYear.value = today.getFullYear();
+        }
+        expiryCheckPopup.style.display = 'flex';
+        disableBodyScroll();
+      });
+
+      applyExpiryFilter.addEventListener('click', () => {
+        const month = expiryMonth.value;
+        const year = expiryYear.value;
+        
+        if (!month || !year) {
+          showAlert('Please select both month and year.');
+          return;
+        }
+        
+        expiryMonthFilter = month;
+        expiryYearFilter = year;
+        
+        expiryCheckPopup.style.display = 'none';
+        enableBodyScroll();
+        
+        // Clear date filters when applying expiry filter
+        fromDateFilter = '';
+        toDateFilter = '';
+        fromDate.value = '';
+        toDate.value = '';
+        findBtn.classList.remove('date-filter-active');
+        
+        checkExpiry(month, year);
+      });
+
+      clearExpiryFilter.addEventListener('click', () => {
+        expiryMonth.value = '';
+        expiryYear.value = '';
+        expiryMonthFilter = null;
+        expiryYearFilter = null;
+        expiryCheckBtn.classList.remove('expiry-filter-active');
+        
+        // Reset to show all vehicles
+        applyFilters();
+        currentPage = 1;
+        renderCurrentPage();
+      });
+
+      cancelExpiryFilter.addEventListener('click', () => {
+        expiryCheckPopup.style.display = 'none';
+        enableBodyScroll();
+      });
+
+      clearAllFilters.addEventListener('click', () => {
+        fromDateFilter = '';
+        toDateFilter = '';
+        fromDate.value = '';
+        toDate.value = '';
+        expiryMonthFilter = null;
+        expiryYearFilter = null;
+        expiryMonth.value = '';
+        expiryYear.value = '';
+        searchQuery = '';
+        searchBar.value = '';
+        clearSearch.style.display = 'none';
+        findBtn.classList.remove('date-filter-active');
+        expiryCheckBtn.classList.remove('expiry-filter-active');
+        
+        applyFilters();
+        currentPage = 1;
+        renderCurrentPage();
+      });
+
+      /* ========== DOWNLOAD HANDLERS ========== */
+downloadBtn.addEventListener('click', () => {
+  downloadPopup.style.display = 'flex';
+  disableBodyScroll();
+});
+
+cancelDownload.addEventListener('click', () => {
+  downloadPopup.style.display = 'none';
+  enableBodyScroll();
+});
+
+downloadPDF.addEventListener('click', () => {
+  const vehicles = getFilteredVehiclesForDownload();
+  
+  if (vehicles.length === 0) {
+    showAlert('No vehicles to export', 'Export Error');
+    downloadPopup.style.display = 'none';
+    enableBodyScroll();
+    return;
+  }
+  
+  const html = buildExportHTML(vehicles);
+  const filename = getFilteredFilename(".pdf");
+
+  html2pdf().from(html).set({
+    filename,
+    jsPDF: { orientation: "landscape", unit: "in", format: "a3" },
+    margin: [0.3, 0.3, 0.3, 0.3],
+    image: { type: "jpeg", quality: 1 },
+    html2canvas: { scale: 2, letterRendering: true }
+  }).save();
+
+  downloadPopup.style.display = 'none';
+  enableBodyScroll();
+});
+
+downloadExcel.addEventListener('click', () => {
+  const vehicles = getFilteredVehiclesForDownload();
+  
+  if (vehicles.length === 0) {
+    showAlert('No vehicles to export', 'Export Error');
+    downloadPopup.style.display = 'none';
+    enableBodyScroll();
+    return;
+  }
+  
+  const filename = getFilteredFilename(".xlsx");
+
+  // Create header with the required columns: ID, Registration number, consignee, Sold on, agent, valid from, expiry
+  const wsData = [
+    ["ID", "REGISTRATION NUMBER", "CONSIGNEE", "SOLD ON", "AGENT", "VALID FROM", "EXPIRY"]
+  ];
+  
+  vehicles.forEach((v) => {
+    wsData.push([
+      (v.id || "N/A").toString().toUpperCase(),
+      (v.regno || "N/A").toString().toUpperCase(),
+      (v.consignee || "N/A").toString().toUpperCase(),
+      (v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase(),
+      (v.insurance_agent || "N/A").toString().toUpperCase(),
+      (v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase(),
+      (v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase()
+    ]);
+  });
+  
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  
+  // Set column widths
+  const colWidths = [
+    { wch: 15 }, // ID
+    { wch: 20 }, // REGISTRATION NUMBER
+    { wch: 20 }, // CONSIGNEE
+    { wch: 15 }, // SOLD ON
+    { wch: 20 }, // AGENT
+    { wch: 15 }, // VALID FROM
+    { wch: 15 }  // EXPIRY
+  ];
+  ws['!cols'] = colWidths;
+  
+  XLSX.utils.book_append_sheet(wb, ws, "Sold Vehicles");
+  XLSX.writeFile(wb, filename);
+
+  downloadPopup.style.display = 'none';
+  enableBodyScroll();
+});
+
+function getFilteredVehiclesForDownload() {
+  // Use the currently filtered data
+  let vehicles = filteredData;
+  
+  // If no filtered data (like when page first loads), use all sold vehicles
+  if (vehicles.length === 0 && soldData.length > 0) {
+    vehicles = soldData;
+  }
+  
+  return vehicles;
+}
+
+function getFilteredFilename(extension) {
+  let parts = ["Sold_Report"];
+  
+  if (expiryMonthFilter && expiryYearFilter) {
+    const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    parts.push(`${monthNames[expiryMonthFilter-1]}_${expiryYearFilter}`);
+  }
+  
+  if (fromDateFilter || toDateFilter) {
+    if (fromDateFilter && toDateFilter) {
+      parts.push(`${fromDateFilter}_to_${toDateFilter}`);
+    } else if (fromDateFilter) {
+      parts.push(`from_${fromDateFilter}`);
+    } else if (toDateFilter) {
+      parts.push(`to_${toDateFilter}`);
+    }
+  }
+  
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  parts.push(dateStr);
+  
+  return parts.join("_") + extension;
+}
+
+function buildExportHTML(vehicles) {
+  const now = new Date();
+  const day = now.getDate();
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+
+  let hours = now.getHours();
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+
+  const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+
+  let html = `
+    <div style="font-family: Arial, sans-serif; margin: 10px;">
+      <h1 style="text-align:center; margin-bottom:5px; font-size: 18px;">Sold Vehicles Report</h1>
+      <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px;">
+        Generated: ${formattedDate}
+      </p>
+      <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:10px; border: 1px solid #000;">
+        <thead style="background:#f0f0f0; font-weight:bold;">
+          <tr>
+            <th>ID</th>
+            <th>REGISTRATION NUMBER</th>
+            <th>CONSIGNEE</th>
+            <th>SOLD ON</th>
+            <th>AGENT</th>
+            <th>VALID FROM</th>
+            <th>EXPIRY</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  vehicles.forEach((v) => {
+    html += `
+      <tr>
+        <td>${(v.id || "N/A").toString().toUpperCase()}</td>
+        <td>${(v.regno || "N/A").toString().toUpperCase()}</td>
+        <td>${(v.consignee || "N/A").toString().toUpperCase()}</td>
+        <td>${(v.soldDate ? formatDateForDisplay(v.soldDate) : "N/A").toString().toUpperCase()}</td>
+        <td>${(v.insurance_agent || "N/A").toString().toUpperCase()}</td>
+        <td>${(v.insurance_validFrom ? formatDateForDisplay(v.insurance_validFrom) : "N/A").toString().toUpperCase()}</td>
+        <td>${(v.insurance_expiry ? formatDateForDisplay(v.insurance_expiry) : "N/A").toString().toUpperCase()}</td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+      // Close popups when clicking outside
+      document.querySelectorAll('.popup').forEach(popup => {
+        popup.addEventListener('click', function(e) {
+          if (e.target === this) {
+            this.style.display = 'none';
+            enableBodyScroll();
+            if (this.id === 'passwordPopup') {
+              passwordInput.value = '';
+              passwordError.style.display = 'none';
+            }
+          }
+        });
+      });
+
+      /* ========== EDIT FUNCTIONS ========== */
+      function openEditPopup(vehicle) {
+        currentEditVehicleId = vehicle.id;
+        editRegnoInput.value = vehicle.regno || '';
+        editLogbookInput.value = vehicle.logbook || '';
+        editPopup.style.display = 'flex';
+        editRegnoInput.focus();
+      }
+
+      function closeEditPopup() {
+        editPopup.style.display = 'none';
+        currentEditVehicleId = null;
+        editForm.reset();
+      }
+
+      editCancelBtn.addEventListener('click', closeEditPopup);
+      
+      editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!currentEditVehicleId) {
+          showAlert('No vehicle selected for editing.');
+          return;
+        }
+        
+        const newRegno = editRegnoInput.value.trim().toUpperCase();
+        const newLogbook = editLogbookInput.value.trim().toUpperCase();
+        
+        if (!newRegno && !newLogbook) {
+          showAlert('Please enter at least one field to update.');
+          return;
+        }
+        
+        try {
+          const updates = {};
+          if (newRegno) updates.regno = newRegno;
+          if (newLogbook) updates.logbook = newLogbook;
+          
+          await update(ref(db, `vehicles/${currentEditVehicleId}`), updates);
+          
+          const vehicleIndex = soldData.findIndex(v => v.id === currentEditVehicleId);
+          if (vehicleIndex !== -1) {
+            if (newRegno) soldData[vehicleIndex].regno = newRegno;
+            if (newLogbook) soldData[vehicleIndex].logbook = newLogbook;
+          }
+          
+          applyFilters();
+          renderCurrentPage();
+          
+          await showAlert('Vehicle details updated successfully!');
+          closeEditPopup();
+          
+        } catch (err) {
+          console.error('Error updating vehicle:', err);
+          showAlert('Failed to update vehicle details. Please try again.');
+        }
+      });
+
+      editPopup.addEventListener('click', (e) => {
+        if (e.target === editPopup) {
+          closeEditPopup();
+        }
+      });
+
+      /* ========== CONSIGNEE UPDATE FUNCTION ========== */
+      async function updateVehicleConsignee(vehicleId, newConsignee) {
+        try {
+          // Show saving indicator (optional)
+          const selectElement = document.querySelector(`select[data-vehicle-id="${vehicleId}"]`);
+          if (selectElement) {
+            selectElement.style.opacity = '0.6';
+          }
+          
+          await update(ref(db, `vehicles/${vehicleId}`), { consignee: newConsignee });
+          
+          // Update local data
+          const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+          if (vehicleIndex !== -1) {
+            soldData[vehicleIndex].consignee = newConsignee;
+          }
+          
+          // Update filtered data if needed
+          const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+          if (filteredIndex !== -1) {
+            filteredData[filteredIndex].consignee = newConsignee;
+          }
+          
+          // Restore select style
+          if (selectElement) {
+            selectElement.style.opacity = '1';
+          }
+          
+          // Show success message (optional)
+          // await showAlert('Consignee updated successfully!', 'Success');
+          
+        } catch (err) {
+          console.error('Error updating consignee:', err);
+          showAlert('Failed to update consignee. Please try again.');
+          
+          // Restore select style
+          const selectElement = document.querySelector(`select[data-vehicle-id="${vehicleId}"]`);
+          if (selectElement) {
+            selectElement.style.opacity = '1';
+          }
+        }
+      }
+
+
+      function updateInsuranceAgentsList() {
+        const agentsMap = new Map(); // Use Map to store normalized version -> original capitalized version
+        
+        soldData.forEach(v => {
+          if (v.insurance_agent && v.insurance_agent !== 'N/A' && v.insurance_agent !== '') {
+            const original = v.insurance_agent.trim();
+            const normalized = original.toUpperCase(); // Normalize to uppercase for comparison
+            
+            // Only add if we haven't seen this normalized version before
+            if (!agentsMap.has(normalized)) {
+              // Store the capitalized version (first letter capital, rest lowercase)
+              const capitalized = original.charAt(0).toUpperCase() + original.slice(1).toLowerCase();
+              agentsMap.set(normalized, capitalized);
+            }
+          }
+        });
+        
+        // Convert to array and sort alphabetically
+        allInsuranceAgents = Array.from(agentsMap.values()).sort((a, b) => a.localeCompare(b));
+      }
+
+
+            async function updateVehicleInsuranceAgent(vehicleId, newAgent) {
+            try {
+              const updateData = {};
+              // Store in UPPERCASE for consistency
+              updateData.insurance_agent = newAgent.toUpperCase();
+              
+              await update(ref(db, `vehicles/${vehicleId}`), updateData);
+              
+              // Update local data
+              const vehicleIndex = soldData.findIndex(v => v.id === vehicleId);
+              if (vehicleIndex !== -1) {
+                soldData[vehicleIndex].insurance_agent = updateData.insurance_agent;
+              }
+              
+              const filteredIndex = filteredData.findIndex(v => v.id === vehicleId);
+              if (filteredIndex !== -1) {
+                filteredData[filteredIndex].insurance_agent = updateData.insurance_agent;
+              }
+              
+              // Refresh the agents list to include new agent
+              updateInsuranceAgentsList();
+              
+              await showAlert('Insurance agent updated successfully!', 'Success');
+              return true;
+            } catch (err) {
+              console.error('Error updating insurance agent:', err);
+              await showAlert('Failed to update insurance agent. Please try again.');
+              return false;
+            }
+          }
+
+      /* ========== DATA LOADING ========== */
+      onValue(ref(db, 'vehicles'), snap => {
+        const data = snap.val() || {};
+        
+        soldData = Object.entries(data)
+          .filter(([id, v]) => v.status === 'sold')
+          .map(([id, v]) => ({ 
+            id, 
+            ...v
+          }));
+        
+        soldData.sort((a, b) => {
+          const regA = (a.regno || '').toUpperCase().trim().replace(/\s+/g, '');
+          const regB = (b.regno || '').toUpperCase().trim().replace(/\s+/g, '');
+          
+          if (!regA && !regB) return 0;
+          if (!regA) return 1;
+          if (!regB) return -1;
+          
+          const prefixA = regA.substring(0, 3);
+          const prefixB = regB.substring(0, 3);
+          
+          if (prefixA !== prefixB) {
+            return prefixA.localeCompare(prefixB);
+          }
+          
+          const lastA = regA.charAt(regA.length - 1);
+          const lastB = regB.charAt(regB.length - 1);
+          
+          if (lastA !== lastB) {
+            return lastA.localeCompare(lastB);
+          }
+          
+          const middleA = regA.substring(3, regA.length - 1);
+          const middleB = regB.substring(3, regB.length - 1);
+          
+          const numA = parseInt(middleA) || 0;
+          const numB = parseInt(middleB) || 0;
+          
+          return numA - numB;
+        });
+        
+        // Update all consignees list
+        updateConsigneesList();
+        updateInsuranceAgentsList();
+        
+        applyFilters();
+        renderCurrentPage();
+      });
+
+      /* ========== UPDATE CONSIGNEES LIST ========== */
+      function updateConsigneesList() {
+  // Get unique consignees from all vehicles with case-normalized deduplication
+  const consigneesMap = new Map(); // Use Map to store normalized version -> original preferred case
+  
+  soldData.forEach(v => {
+    if (v.consignee && v.consignee !== 'N/A' && v.consignee !== '') {
+      const normalized = v.consignee.toUpperCase().trim();
+      // Keep the first occurrence's original case, or you can prefer a specific format
+      if (!consigneesMap.has(normalized)) {
+        consigneesMap.set(normalized, v.consignee);
+      }
+    }
+  });
+  
+  // Convert to array and sort alphabetically by normalized value
+  allConsignees = Array.from(consigneesMap.values()).sort((a, b) => 
+    a.toUpperCase().localeCompare(b.toUpperCase())
+  );
+}
+
+      /* ========== FILTER FUNCTIONS ========== */
+      function applyFilters() {
+        filteredData = [...soldData];
+        
+        // Apply date filter
+        if (fromDateFilter || toDateFilter) {
+          filteredData = filteredData.filter(v => {
+            // Skip vehicles with no sold date
+            if (!v.soldDate || v.soldDate === 'N/A' || v.soldDate === '-') {
+              return false;
+            }
+            
+            const soldDate = v.soldDate ? formatDisplayDate(v.soldDate) : 'N/A';
+            return isDateInRange(soldDate, fromDateFilter, toDateFilter);
+          });
+        }
+        
+        // Apply expiry filter (if active)
+        if (expiryMonthFilter && expiryYearFilter) {
+          filteredData = filteredData.filter(v => {
+            const expiryDate = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
+            return isExpiryInMonthYear(expiryDate, expiryMonthFilter, expiryYearFilter);
+          });
+        }
+        
+        // Apply search filter
+        if (searchQuery) {
+          filteredData = filteredData.filter(v => {
+            if (!v) return false;
+            const searchableFields = [
+              v.brand, v.model, v.id, v.supplier, v.consignee, v.receivingDate,
+              v.chassis, v.engine, v.shift, v.drive, v.fuel, v.color,
+              v.modelYearMonth, v.cc || v.ccValue, v.package || v.packageValue,
+              v.mileage, v.regno, v.logbook, v.location, v.remarks,
+              v.buyerName, v.buyerPhone, v.buyerId, v.buyerPin,
+              v.insurance_agent, v.insurance_type, v.insurance_validFrom, v.insurance_expiry
+            ];
+            
+            return searchableFields.some(field =>
+              String(field || '').toLowerCase().includes(searchQuery)
+            );
+          });
+        }
+        
+        totalItems = filteredData.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+        stockCount.textContent = `(${totalItems})`;
+        
+        updateActiveFiltersDisplay();
+        updatePaginationInfo();
+        updatePaginationButtons();
+      }
+
+      function updateActiveFiltersDisplay() {
+        const filters = [];
+        
+        if (fromDateFilter && toDateFilter) {
+          filters.push(`Sold Date: ${fromDateFilter} to ${toDateFilter}`);
+        } else if (fromDateFilter) {
+          filters.push(`Sold Date: from ${fromDateFilter}`);
+        } else if (toDateFilter) {
+          filters.push(`Sold Date: to ${toDateFilter}`);
+        }
+        
+        if (expiryMonthFilter && expiryYearFilter) {
+          const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+          filters.push(`Expiry: ${monthNames[expiryMonthFilter - 1]} ${expiryYearFilter}`);
+        }
+        
+        if (searchQuery) {
+          filters.push(`Search: "${searchQuery}"`);
+        }
+        
+        if (filters.length > 0) {
+          filterDescription.textContent = `Active filters: ${filters.join(' | ')}`;
+          activeFilters.style.display = 'block';
+        } else {
+          activeFilters.style.display = 'none';
+        }
+      }
+
+      /* ========== SEARCH FUNCTIONALITY ========== */
+      searchBar.addEventListener("input", () => {
+        searchQuery = searchBar.value.trim().toLowerCase();
+        clearSearch.style.display = searchQuery ? "block" : "none";
+        applyFilters();
+        currentPage = 1;
+        renderCurrentPage();
+      });
+
+      clearSearch.onclick = () => {
+        searchBar.value = "";
+        searchQuery = "";
+        clearSearch.style.display = "none";
+        applyFilters();
+        currentPage = 1;
+        renderCurrentPage();
+      };
+
+      /* ========== PAGINATION FUNCTIONS ========== */
+      function updatePaginationInfo() {
+        const start = totalItems > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0;
+        const end = totalItems > 0 ? Math.min(currentPage * itemsPerPage, totalItems) : 0;
+        
+        currentPageSpan.textContent = currentPage;
+        totalPagesSpan.textContent = totalPages;
+        totalItemsSpan.textContent = totalItems;
+        rangeStartSpan.textContent = start;
+        rangeEndSpan.textContent = end;
+        
+        gotoPageInput.value = currentPage;
+        gotoPageInput.max = totalPages;
+      }
+
+      function updatePaginationButtons() {
+        const isFirstPage = currentPage <= 1;
+        const isLastPage = currentPage >= totalPages;
+        
+        firstPageBtn.disabled = isFirstPage;
+        prevPageBtn.disabled = isFirstPage;
+        nextPageBtn.disabled = isLastPage;
+        lastPageBtn.disabled = isLastPage;
+      }
+
+      function changePage(newPage) {
+        if (newPage < 1 || newPage > totalPages) return;
+        currentPage = newPage;
+        renderCurrentPage();
+      }
+
+      firstPageBtn.addEventListener('click', () => changePage(1));
+      prevPageBtn.addEventListener('click', () => changePage(currentPage - 1));
+      nextPageBtn.addEventListener('click', () => changePage(currentPage + 1));
+      lastPageBtn.addEventListener('click', () => changePage(totalPages));
+      
+      itemsPerPageSelect.addEventListener('change', () => {
+        itemsPerPage = parseInt(itemsPerPageSelect.value);
+        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+        
+        if (currentPage > totalPages) {
+          currentPage = totalPages;
+        }
+        
+        renderCurrentPage();
+      });
+      
+      gotoPageBtn.addEventListener('click', () => {
+        const pageNum = parseInt(gotoPageInput.value);
+        if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages) {
+          changePage(pageNum);
+        }
+      });
+      
+      gotoPageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          gotoPageBtn.click();
+        }
+      });
+
+      /* ========== RENDER CURRENT PAGE ========== */
+function renderCurrentPage() {
+  if (filteredData.length === 0) {
+    soldList.innerHTML = '<p>No sold vehicles found.</p>';
+    updatePaginationInfo();
+    return;
+  }
+  
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredData.length);
+  const pageData = filteredData.slice(startIndex, endIndex);
+  
+  soldList.innerHTML = '';
+  
+  // Generate HTML for each vehicle
+  pageData.forEach(v => {
+    const div = document.createElement('div');
+    div.className = 'vehicle-box';
+    
+    const receivingDate = v.receivingDate ? formatDisplayDate(v.receivingDate) : 'N/A';
+    const soldDate = v.soldDate ? formatDisplayDate(v.soldDate) : 'N/A';
+    const insuranceValidFrom = v.insurance_validFrom ? formatDisplayDate(v.insurance_validFrom) : 'N/A';
+    const insuranceExpiry = v.insurance_expiry ? formatDisplayDate(v.insurance_expiry) : 'N/A';
+    
+    const isExpiryMatch = expiryMonthFilter && expiryYearFilter && 
+                          isExpiryInMonthYear(insuranceExpiry, expiryMonthFilter, expiryYearFilter);
+    
+    // Create consignee dropdown
+    let consigneeHtml = '';
+    if (allConsignees.length > 0) {
+      consigneeHtml = `
+        <div title="${(v.consignee || 'N/A').toString().toUpperCase()}">
+          <b>CONSIGNEE:</b> 
+          <span class="consignee-container">
+            <select class="consignee-select" data-vehicle-id="${v.id}" data-original-value="${v.consignee || 'N/A'}">
+              <option value="">SELECT CONSIGNEE</option>
+              ${allConsignees.map(c => `<option value="${c}" ${v.consignee === c ? 'selected' : ''}>${c}</option>`).join('')}
+            </select>
+          </span>
+        </div>
+      `;
+    } else {
+      consigneeHtml = `<div title="${(v.consignee || 'N/A').toString().toUpperCase()}"><b>CONSIGNEE:</b> ${highlight((v.consignee || 'N/A').toString().toUpperCase(), searchQuery)}</div>`;
+    }
+    
+    div.innerHTML = `
+      <div class="vehicle-details">
+        <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
+          <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span></strong>
+        
+        <div class="vehicle-info-grid">
+          <div title="${(v.id || '').toString().toUpperCase()}"><b>VEHICLE ID:</b> ${highlight((v.id || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.supplier || '').toString().toUpperCase()}"><b>SUPPLIER:</b> ${highlight((v.supplier || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          ${consigneeHtml}
+          <div title="${receivingDate}"><b>RECEIVING DATE:</b> ${highlight(receivingDate, searchQuery)}</div>
+          <div title="${(v.chassis || '').toString().toUpperCase()}"><b>CHASSIS NO:</b> ${highlight((v.chassis || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.engine || '').toString().toUpperCase()}"><b>ENGINE NO:</b> ${highlight((v.engine || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.shift || '').toString().toUpperCase()}"><b>SHIFT:</b> ${highlight((v.shift || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.drive || '').toString().toUpperCase()}"><b>DRIVE:</b> ${highlight((v.drive || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.fuel || '').toString().toUpperCase()}"><b>FUEL:</b> ${highlight((v.fuel || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.color || '').toString().toUpperCase()}"><b>COLOR:</b> ${highlight((v.color || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.modelYearMonth || '').toString().toUpperCase()}"><b>YEAR:</b> ${highlight((v.modelYearMonth || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.cc || v.ccValue || '').toString().toUpperCase()}"><b>CC:</b> ${highlight(((v.cc || v.ccValue) || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.package || v.packageValue || 'STANDARD').toString().toUpperCase()}"><b>PACKAGE:</b> ${highlight(((v.package || v.packageValue || 'STANDARD') || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div title="${(v.mileage || '').toString().toUpperCase()}"><b>MILEAGE:</b> ${highlight((v.mileage || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div><b>REG NO:</b> ${highlight((v.regno || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div><b>LOGBOOK:</b> ${highlight((v.logbook || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          <div><b>STATUS:</b> <span class="status-sold">SOLD</span></div>
+          <div><b>REMARKS:</b> ${highlight((v.remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+        </div>
+        
+        <div class="buyer-section">
+          <div class="buyer-grid">
+            <div><span class="buyer-label">BUYER NAME:</span> ${highlight((v.buyerName || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+            <div><span class="buyer-label">PHONE:</span> ${highlight((v.buyerPhone || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+            <div><span class="buyer-label">BUYER ID:</span> ${highlight((v.buyerId || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+            <div><span class="buyer-label">PIN:</span> ${highlight((v.buyerPin || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+            <div><span class="buyer-label">SOLD DATE:</span> ${highlight(soldDate, searchQuery)}</div>
+            <div><span class="buyer-label">SOLD ON:</span> ${highlight((v.soldType || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          </div>
+        </div>
+        
+        <div class="insurance-section">
+          <div class="insurance-grid">
+              <select class="insurance-agent-select" data-agent-id="${v.id}" data-original="${v.insurance_agent || ''}">
+              <option value="">SELECT INSURANCE AGENT</option>
+              ${allInsuranceAgents.map(agent => {
+                // Case-insensitive comparison
+                const isSelected = v.insurance_agent && v.insurance_agent.toUpperCase() === agent.toUpperCase();
+                return `<option value="${agent}" ${isSelected ? 'selected' : ''}>${agent}</option>`;
+              }).join('')}
+            </select>
+            <div><span class="buyer-label">INSURANCE TYPE:</span> ${highlight((v.insurance_type || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+            <div><span class="buyer-label">VALID FROM:</span> <span class="editable-date" data-vehicle-id="${v.id}" data-field="insurance_validFrom" data-value="${insuranceValidFrom}">${insuranceValidFrom}</span></div>
+            <div><span class="buyer-label">EXPIRY:</span> <span class="editable-date ${isExpiryMatch ? 'expiry-highlight' : ''}" data-vehicle-id="${v.id}" data-field="insurance_expiry" data-value="${insuranceExpiry}">${insuranceExpiry}</span></div>
+            <div><span class="buyer-label">REMARKS:</span> ${highlight((v.insurance_remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+          </div>
+        </div>
+        
+        <div class="vehicle-actions">
+          <button class="edit-btn" data-id="${v.id}" style="background-color: #3498db; color: white;">EDIT REG/BOOK</button>
+          <button class="repossess-btn" data-id="${v.id}" style="background-color: #e74c3c; color: white;">REPOSSESS</button>
+        </div>
+      </div>
+    `;
+    
+    soldList.appendChild(div);
+  });
+  
+  // ========== ATTACH EVENT LISTENERS AFTER HTML IS ADDED ==========
+  
+  // Consignee dropdown listeners
+  document.querySelectorAll('.consignee-select').forEach(select => {
+    // Remove any existing listeners to avoid duplicates
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+    
+    newSelect.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const vehicleId = newSelect.dataset.vehicleId;
+      const newConsignee = newSelect.value;
+      const originalValue = newSelect.dataset.originalValue;
+      
+      if (newConsignee !== originalValue && newConsignee !== '') {
+        const confirmed = await showConfirm(`Change consignee from "${originalValue || 'N/A'}" to "${newConsignee}"?`);
+        
+        if (confirmed) {
+          await updateVehicleConsignee(vehicleId, newConsignee);
+          newSelect.dataset.originalValue = newConsignee;
+        } else {
+          newSelect.value = originalValue || '';
+        }
+      } else if (newConsignee === '') {
+        newSelect.value = originalValue || '';
+        await showAlert('Please select a valid consignee.', 'Invalid Selection');
+      }
+    });
+  });
+  
+  // Insurance agent dropdown listeners
+  document.querySelectorAll('.insurance-agent-select').forEach(select => {
+    // Remove any existing listeners to avoid duplicates
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+    
+    newSelect.addEventListener('change', async (e) => {
+      e.stopPropagation();
+      const vehicleId = newSelect.dataset.agentId;
+      const newAgent = newSelect.value;
+      const originalValue = newSelect.dataset.original;
+      
+      if (newAgent !== originalValue && newAgent !== '') {
+        const confirmed = await showConfirm(`Change insurance agent from "${originalValue || 'N/A'}" to "${newAgent}"?`);
+        
+        if (confirmed) {
+          await updateVehicleInsuranceAgent(vehicleId, newAgent);
+          newSelect.dataset.original = newAgent;
+          // Update the agents list to include any new agent
+          updateInsuranceAgentsList();
+          // Re-render to refresh dropdown options
+          renderCurrentPage();
+        } else {
+          newSelect.value = originalValue || '';
+        }
+      } else if (newAgent === '') {
+        newSelect.value = originalValue || '';
+        await showAlert('Please select a valid insurance agent.', 'Invalid Selection');
+      }
+    });
+  });
+  
+  // Editable date listeners
+  document.querySelectorAll('.editable-date').forEach(span => {
+    // Remove any existing listeners
+    const newSpan = span.cloneNode(true);
+    span.parentNode.replaceChild(newSpan, span);
+    
+    newSpan.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      if (activeDateEdit) {
+        cancelDateEdit();
+      }
+      
+      const vehicleId = newSpan.dataset.vehicleId;
+      const field = newSpan.dataset.field;
+      const currentValue = newSpan.dataset.value;
+      
+      startDateEdit(newSpan, vehicleId, field, currentValue);
+    });
+  });
+  
+  updatePaginationInfo();
+  updatePaginationButtons();
+}
+
+      /* ========== HELPER FUNCTIONS ========== */
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function highlight(text, query) {
+        if (!query || text === 'N/A') return text;
+        const pattern = escapeRegExp(query);
+        const regex = new RegExp(`(${pattern})`, 'gi');
+        return (text + '').replace(regex, '<span class="highlight-search">$1</span>');
+      }
+
+      function formatDisplayDate(raw) {
+        if (!raw || raw === 'N/A') return 'N/A';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const d = new Date(raw);
+          if (!isNaN(d.getTime())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+          }
+        }
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+        }
+        const digits = (raw.match(/\d+/g) || []).join('');
+        if (/^\d{8}$/.test(digits)) {
+          const y = digits.slice(0,4);
+          const m = Number(digits.slice(4,6)) - 1;
+          const d = digits.slice(6,8);
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${d} ${months[m]} ${String(y).slice(2)}`;
+        }
+        return String(raw).toUpperCase();
+      }
+
+      /* ========== REPOSSESS BUTTON HANDLER ========== */
+      soldList.addEventListener('click', async (e) => {
+        const target = e.target;
+        const button = target.closest('button');
+        if (!button) return;
+        
+        const vehicleId = button.getAttribute('data-id');
+        if (!vehicleId) return;
+        
+        const vehicle = soldData.find(v => String(v.id) === String(vehicleId));
+        
+        if (!vehicle) {
+          console.error('Vehicle not found:', vehicleId);
+          showAlert('Vehicle not found!');
+          return;
+        }
+        
+        if (button.classList.contains('edit-btn')) {
+          openEditPopup(vehicle);
+        }
+        else if (button.classList.contains('repossess-btn')) {
+          const confirmResult = await showConfirm(`Are you sure you want to repossess ${vehicle.brand || ''} ${vehicle.model || ''}?`);
+          if (!confirmResult) return;
+
+          try {
+            const vehicleRef = ref(db, `vehicles/${vehicleId}`);
+            const snap = await get(vehicleRef);
+            if (!snap.exists()) return;
+
+            const vehicleData = snap.val();
+            
+            if (!vehicleData.statusHistory) {
+              vehicleData.statusHistory = [];
+            }
+            
+            vehicleData.statusHistory.push({
+              status: 'repossessed',
+              date: new Date().toISOString().split('T')[0],
+              timestamp: Date.now()
+            });
+
+            await update(vehicleRef, {
+              status: 'repossessed',
+              statusHistory: vehicleData.statusHistory
+            });
+
+            soldData = soldData.filter(v => v.id !== vehicleId);
+            
+            applyFilters();
+            renderCurrentPage();
+
+            await showAlert('Vehicle successfully moved to repossessed section.');
+            
+            setTimeout(() => {
+              window.location.href = 'repossessed.html';
+            }, 1000);
+            
+          } catch (err) {
+            console.error(err);
+            showAlert('Error repossessing vehicle. Check console for details.');
+          }
+        }
+      });
+
+      // Click outside to cancel date edit
+      document.addEventListener('click', (e) => {
+        if (activeDateEdit && !e.target.closest('.date-edit-container')) {
+          cancelDateEdit();
+        }
+      });
+
+      // Set current year as default in expiry year input
+      const currentYear = new Date().getFullYear();
+      expiryYear.value = currentYear;
+
+      // Initial render
+      renderCurrentPage();
+    </script>
+  </div>
+</body>
+</html>

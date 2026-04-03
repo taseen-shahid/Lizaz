@@ -1,0 +1,1072 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Reserved Vehicles</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+
+  <style>
+    #reservedList {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 20px;
+    }
+    .vehicle-box {
+      display: flex;
+      border: 1px solid #ccc;
+      padding: 5px;
+      border-radius: 8px;
+      align-items: flex-start;
+      gap: 5px;
+      background: #fff;
+    }
+    .vehicle-details {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      font-size: 14px;
+      width: 100%;
+    }
+    .vehicle-details strong {
+      font-size: 16px;
+      color: #222;
+    }
+    .vehicle-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 8px 15px;
+      min-width: 0;
+    }
+    .vehicle-info-grid div {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+    }
+    .vehicle-info-grid b {
+      display: inline-block;
+      min-width: 120px;
+      color: #333;
+    }
+    .vehicle-actions {
+      margin-top: 8px;
+    }
+    .vehicle-actions button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    #searchBar {
+      padding: 6px 10px;
+      font-size: 14px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #consigneeButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    #consigneeButtons button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #consigneeButtons button:hover {
+      background-color: #0056b3;
+    }
+    #reservedCount {
+      font-size: 18px;
+      font-weight: normal;
+      color: #555;
+      margin-left: 8px;
+    }
+    #locationButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    #locationButtons button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #locationButtons button:hover {
+      background-color: #0056b3;
+    }
+    .highlight-search {
+      background: yellow;
+      font-weight: bold;
+      padding: 2px;
+    }
+    .model-name-red {
+      color: red;
+      font-weight: bold;
+    }
+    
+    .statusSelect {
+      width: 100%;
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      background-color: white;
+      cursor: pointer;
+    }
+    
+    .statusSelect:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+    }
+    
+    .status-reserved {
+      background-color: #fff3cd !important;
+    }
+    
+    .status-available {
+      background-color: #d4edda !important;
+    }
+    
+    .status-sold {
+      background-color: #cce5ff !important;
+    }
+    
+    .filter-active {
+      background-color: #dc3545 !important;
+    }
+    
+    /* Custom Alert Dialog Styles */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .alert-content {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .alert-title {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .alert-message {
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .alert-button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+    }
+    
+    .alert-button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Custom Alert Dialog -->
+  <div id="customAlert" class="custom-alert">
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">Alert</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-button" id="alertOkButton">OK</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+    <a href="dashboard.html">DASHBOARD</a>
+    <a href="onTheWay.html">On The Way</a>
+    <a href="stock.html">STOCK</a>
+    <a href="reserved.html" class="active">RESERVED</a>
+    <a href="repossessed.html">REPOSSESSED</a>
+    <a href="sold.html">SOLD</a>
+    <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+    <a href="logbooks.html">LOGBOOKS</a> 
+    <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <div class="main-content">
+    <header>
+      <div>
+        <h1 style="display:inline;">RESERVED VEHICLES</h1>
+        <span id="reservedCount">(0)</span>
+      </div>
+      <div style="position:relative;">
+        <input type="text" id="searchBar" placeholder="SEARCH BY ANY FIELD..." />
+        <span id="clearSearch" style="
+          position:absolute;
+          right:8px;
+          top:50%;
+          transform:translateY(-50%);
+          cursor:pointer;
+          font-weight:bold;
+          display:none;
+        ">✕</span>
+      </div>
+      <div id="consigneeButtons"></div>
+      <div id="locationButtons"></div>
+    </header>
+
+    <div id="reservedList">
+      <p>Loading reserved vehicles...</p>
+    </div>
+
+    <!-- SOLD POPUP -->
+    <div id="soldPopup" class="popup" style="display:none;">
+      <div class="popup-content">
+        <div class="sold-section">
+          <h3>Vehicle Information</h3>
+          <div class="vehicle-grid">
+            <div><b>Vehicle ID:</b> <span id="soldVehicleId"></span></div>
+            <div><b>Brand:</b> <span id="soldBrand"></span></div>
+            <div><b>Model:</b> <span id="soldModel"></span></div>
+            <div><b>Chassis:</b> <span id="soldChassis"></span></div>
+            <div><b>Engine:</b> <span id="soldEngine"></span></div>
+            <div><b>Fuel:</b> <span id="soldFuel"></span></div>
+            <div><b>CC:</b> <span id="soldCC"></span></div>
+            <div><b>Color:</b> <span id="soldColor"></span></div>
+            <div><b>Registration:</b> <span id="soldRegno"></span></div>
+          </div>
+        </div>
+
+        <div class="sold-section buyer-insurance-section">
+          <div class="two-column-grid">
+            <div>
+              <h3>Buyer Information</h3>
+              <div class="single-column-grid">
+                <div><label required>Name: <input type="text" id="buyerName"></label></div>
+                <div><label>Phone: <input required type="text" id="buyerPhone"></label></div>
+                <div><label>Buyer ID: <input required type="text" id="buyerId"></label></div>
+                <div><label>PIN: <input required type="text" id="buyerPin"></label></div>
+                <div>
+                  <label>Sold On:
+                    <select id="soldType" required>
+                      <option value="">Select</option>
+                      <option value="Nill">Nill</option>
+                      <option value="HP">HP</option>
+                    </select>
+                  </label>
+                </div>
+                <div>
+                  <label>Sold Date:
+                    <input type="date" id="soldOn" required>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3>Insurance Information</h3>
+              <div class="single-column-grid">
+                <div><label>Agent:
+                  <select id="insuranceAgent">
+                    <option value="">Select Agent</option>
+                  </select>
+                </label></div>
+                <div><label>Type: 
+                  <select id="insuranceType">
+                    <option value="">Select Type</option>
+                    <option value="PVT">PVT</option>
+                    <option value="COM">COM</option>
+                    <option value="PSV">PSV</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
+                </label></div>
+                <div><label>Valid From: <input type="date" id="insuranceValidFrom"></label></div>
+                <div><label>Expiry: <input type="date" id="insuranceExpiry"></label></div>
+                <div><label>Remarks: <input type="text" id="insuranceRemarks"></label></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="popup-actions">
+          <button id="confirmSoldBtn">Confirm Sold</button>
+          <button id="cancelSoldBtn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { db, ref, onValue, get, update } from '../firebase.js';
+
+      const reservedList = document.getElementById('reservedList');
+      const consigneeButtonsDiv = document.getElementById('consigneeButtons');
+      const reservedCount = document.getElementById('reservedCount');
+      const searchBar = document.getElementById('searchBar');
+      const locationButtonsDiv = document.getElementById('locationButtons');
+      
+      let currentLocationFilter = '';
+      let vehiclesData = {};
+      let currentFilter = '';
+      let searchQuery = '';
+      let locationsList = [];
+      let selectedVehicleId = null;
+
+      // Custom Alert Function
+      function showAlert(message, title = "Alert") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          
+          alert.style.display = 'flex';
+          
+          const closeAlert = () => {
+            alert.style.display = 'none';
+            resolve(true);
+          };
+          
+          alertOkButton.onclick = closeAlert;
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert();
+          };
+        });
+      }
+
+      function showConfirm(message, title = "Confirm") {
+        return new Promise(resolve => {
+          const alert = document.getElementById('customAlert');
+          const alertTitle = document.getElementById('alertTitle');
+          const alertMessage = document.getElementById('alertMessage');
+          const alertOkButton = document.getElementById('alertOkButton');
+          
+          alertTitle.textContent = title;
+          alertMessage.textContent = message;
+          alertOkButton.textContent = 'OK';
+          
+          alert.style.display = 'flex';
+          
+          const closeAlert = (result) => {
+            alert.style.display = 'none';
+            alertOkButton.textContent = 'OK';
+            resolve(result);
+          };
+          
+          alertOkButton.onclick = () => closeAlert(true);
+          alert.onclick = (e) => {
+            if (e.target === alert) closeAlert(false);
+          };
+        });
+      }
+
+      // Load locations from essentials
+      onValue(ref(db, 'essentials/location'), snap => {
+        const data = snap.val() || {};
+        locationsList = Object.values(data)
+          .map(l => l.name?.toString().trim())
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b));
+      });
+
+      // Fetch all vehicles
+      onValue(ref(db, 'vehicles'), snap => {
+        vehiclesData = snap.val() || {};
+        renderConsigneeButtons();
+        renderLocationButtons();
+        renderReserved();
+      });
+
+      function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      }
+
+      function highlight(text, query) {
+        if (!query) return text;
+        const pattern = escapeRegExp(query);
+        const regex = new RegExp(`(${pattern})`, 'gi');
+        return (text + '').replace(regex, '<span class="highlight-search">$1</span>');
+      }
+
+      function formatDisplayDate(raw) {
+        if (!raw) return 'N/A';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          const d = new Date(raw);
+          if (!isNaN(d.getTime())) {
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+          }
+        }
+        const parsed = new Date(raw);
+        if (!isNaN(parsed.getTime())) {
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+        }
+        const digits = (raw.match(/\d+/g) || []).join('');
+        if (/^\d{8}$/.test(digits)) {
+          const y = digits.slice(0,4);
+          const m = Number(digits.slice(4,6)) - 1;
+          const d = digits.slice(6,8);
+          const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+          return `${d} ${months[m]} ${String(y).slice(2)}`;
+        }
+        return String(raw).toUpperCase();
+      }
+
+      function getStatusOptions(currentStatus) {
+        const status = currentStatus || 'reserved';
+        
+        switch(status) {
+          case 'reserved':
+            return [
+              { value: 'reserved', text: 'RESERVED', selected: true },
+              { value: 'available', text: 'AVAILABLE' },
+              { value: 'sold', text: 'SOLD' }
+            ];
+          case 'available':
+            return [
+              { value: 'available', text: 'AVAILABLE', selected: true },
+              { value: 'sold', text: 'SOLD' },
+              { value: 'reserved', text: 'RESERVED' }
+            ];
+          case 'sold':
+            return [
+              { value: 'sold', text: 'SOLD', selected: true },
+              { value: 'repossessed', text: 'REPOSSESSED' }
+            ];
+          default:
+            return [
+              { value: 'reserved', text: 'RESERVED', selected: true },
+              { value: 'available', text: 'AVAILABLE' },
+              { value: 'sold', text: 'SOLD' }
+            ];
+        }
+      }
+
+      function getStatusClass(status) {
+        const vehicleStatus = status || 'reserved';
+        switch(vehicleStatus) {
+          case 'reserved': return 'status-reserved';
+          case 'available': return 'status-available';
+          case 'sold': return 'status-sold';
+          default: return '';
+        }
+      }
+
+      function renderConsigneeButtons() {
+        consigneeButtonsDiv.innerHTML = "";
+        const allBtn = document.createElement("button");
+        allBtn.textContent = "ALL";
+        allBtn.onclick = () => {
+          currentFilter = "";
+          renderReserved();
+          renderConsigneeButtons();
+        };
+        if (!currentFilter) allBtn.classList.add("filter-active");
+        consigneeButtonsDiv.appendChild(allBtn);
+
+        const consignees = [...new Set(Object.values(vehiclesData)
+          .filter(v => (v.status || 'available') === 'reserved')
+          .map(v => (v?.consignee || '').toString().trim().toUpperCase())
+          .filter(Boolean))]
+          .sort((a,b) => a.localeCompare(b));
+
+        consignees.forEach(name => {
+          const btn = document.createElement("button");
+          btn.textContent = name;
+          if (currentFilter === name) btn.classList.add("filter-active");
+          btn.onclick = () => {
+            currentFilter = name;
+            renderReserved();
+            renderConsigneeButtons();
+          };
+          consigneeButtonsDiv.appendChild(btn);
+        });
+      }
+
+      function renderLocationButtons() {
+        locationButtonsDiv.innerHTML = "";
+        const allBtn = document.createElement("button");
+        allBtn.textContent = "ALL LOCATIONS";
+        if (!currentLocationFilter) allBtn.classList.add("filter-active");
+        allBtn.onclick = () => {
+          currentLocationFilter = "";
+          renderReserved();
+          renderLocationButtons();
+        };
+        locationButtonsDiv.appendChild(allBtn);
+
+        const locations = [...new Set(Object.values(vehiclesData)
+          .filter(v => (v.status || 'available') === 'reserved')
+          .map(v => (v?.location || '').toString().trim().toUpperCase())
+          .filter(Boolean))]
+          .sort((a,b) => a.localeCompare(b));
+
+        locations.forEach(loc => {
+          const btn = document.createElement("button");
+          btn.textContent = loc;
+          if (currentLocationFilter === loc) btn.classList.add("filter-active");
+          btn.onclick = () => {
+            currentLocationFilter = loc;
+            renderReserved();
+            renderLocationButtons();
+          };
+          locationButtonsDiv.appendChild(btn);
+        });
+      }
+
+      const clearSearch = document.getElementById("clearSearch");
+      searchBar.addEventListener("input", () => {
+        searchQuery = searchBar.value.trim().toLowerCase();
+        clearSearch.style.display = searchQuery ? "block" : "none";
+        renderReserved();
+      });
+
+      clearSearch.onclick = () => {
+        searchBar.value = "";
+        searchQuery = "";
+        clearSearch.style.display = "none";
+        renderReserved();
+      };
+
+      function renderReserved() {
+        reservedList.innerHTML = '';
+        let filteredVehicles = Object.values(vehiclesData || {});
+
+        filteredVehicles = filteredVehicles.filter(v => (v.status || 'available') === 'reserved');
+
+        if (currentFilter) {
+          filteredVehicles = filteredVehicles.filter(v => v && (v.consignee || '').toString().trim().toUpperCase() === currentFilter);
+        }
+        
+        if (currentLocationFilter) {
+          filteredVehicles = filteredVehicles.filter(v => v && (v.location || '').toString().trim().toUpperCase() === currentLocationFilter);
+        }
+
+        if (searchQuery) {
+          filteredVehicles = filteredVehicles.filter(v => {
+            if (!v) return false;
+            const searchableFields = [
+              v.brand, v.model, v.supplier, v.consignee, v.receivingDate,
+              v.chassis, v.engine, v.shift, v.drive, v.fuel, v.color,
+              v.modelYearMonth, v.cc || v.ccValue, v.package || v.packageValue,
+              v.mileage, v.regno, v.logbook, v.location, v.remarks, v.id,
+              v.customerName || ''
+            ];
+            return searchableFields.some(field =>
+              String(field || '').toLowerCase().includes(searchQuery)
+            );
+          });
+        }
+
+        filteredVehicles.sort((a, b) => {
+          const modelA = (a.model || '').toString().toUpperCase();
+          const modelB = (b.model || '').toString().toUpperCase();
+          return modelA.localeCompare(modelB);
+        });
+
+        reservedCount.textContent = `(${filteredVehicles.length})`;
+
+        if (filteredVehicles.length === 0) {
+          reservedList.innerHTML = '<p>No reserved vehicles found.</p>';
+          return;
+        }
+
+        filteredVehicles.forEach(v => {
+          const key = Object.keys(vehiclesData).find(k => vehiclesData[k] === v);
+          const currentStatus = v.status || 'reserved';
+          const statusOptions = getStatusOptions(currentStatus);
+          const statusClass = getStatusClass(currentStatus);
+          
+          // Get customer information with multiple possible field names
+          const customerName = v.customerName || v.customer_name || v['customerName'] || 'N/A';
+          const customerPhone = v.customerPhone || v.customer_phone || v['Customer Phone'] || v.phone || 'N/A';
+          const customerId = v.customerId || v.customer_id || v['Customer ID'] || v.idNumber || 'N/A';
+
+          const div = document.createElement('div');
+          div.className = 'vehicle-box';
+
+          div.innerHTML = `
+            <div class="vehicle-details">
+              <strong>${highlight((v.brand || 'N/A').toString().toUpperCase(), searchQuery)} 
+                <span class="model-name-red">${highlight((v.model || 'N/A').toString().toUpperCase(), searchQuery)}</span>
+                <div><b>FOR CUSTOMER:</b> ${highlight(customerName, searchQuery)}</div>
+              </strong>
+              
+              <div class="vehicle-info-grid">
+                <div><b>VEHICLE ID:</b> ${highlight((key || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>SUPPLIER:</b> ${highlight((v.supplier || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>CONSIGNEE:</b> ${highlight((v.consignee || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>RECEIVING DATE:</b> ${highlight((formatDisplayDate(v.receivingDate) || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>CHASSIS NO:</b> ${highlight((v.chassis || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>ENGINE NO:</b> ${highlight((v.engine || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>SHIFT:</b> ${highlight((v.shift || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>DRIVE:</b> ${highlight((v.drive || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>FUEL:</b> ${highlight((v.fuel || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>COLOR:</b> ${highlight((v.color || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>YEAR:</b> ${highlight((v.modelYearMonth || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>CC:</b> ${highlight(((v.cc || v.ccValue) || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>PACKAGE:</b> ${highlight(((v.package || v.packageValue || 'STANDARD') || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>MILEAGE:</b> ${highlight((v.mileage || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>REG NO:</b> ${highlight((v.regno || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>LOGBOOK:</b> ${highlight((v.logbook || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div>
+                  <b>LOCATION:</b>
+                  <select class="locationSelect" data-id="${key}" style="min-width: 150px; padding: 3px 6px; font-size: 13px; border-radius: 4px;">
+                    <option value="">SELECT LOCATION</option>
+                    ${locationsList.map(loc => 
+                      `<option value="${loc}" ${(v.location || '').toString().toUpperCase() === loc.toUpperCase() ? 'selected' : ''}>${loc.toUpperCase()}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div>
+                  <b>STATUS:</b>
+                  <select class="statusSelect ${statusClass}" data-id="${key}" style="min-width: 150px; padding: 3px 6px;">
+                    ${statusOptions.map(option => 
+                      `<option value="${option.value}" ${option.selected ? 'selected' : ''}>${option.text}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div><b>REMARKS:</b> ${highlight((v.remarks || 'N/A').toString().toUpperCase(), searchQuery)}</div>
+                <div><b>CUSTOMER PHONE:</b> ${highlight(customerPhone, searchQuery)}</div>
+                <div><b>CUSTOMER ID:</b> ${highlight(customerId, searchQuery)}</div>
+              </div>
+            </div>
+          `;
+
+          reservedList.appendChild(div);
+        });
+      }
+
+      reservedList.addEventListener('change', async (e) => {
+        if (!e.target.classList.contains('statusSelect')) return;
+
+        const vehicleId = e.target.dataset.id;
+        const newStatus = e.target.value;
+        
+        if (!vehicleId || !newStatus) return;
+
+        const vehicleRef = ref(db, `vehicles/${vehicleId}`);
+        const snap = await get(vehicleRef);
+        if (!snap.exists()) return;
+        
+        const vehicle = snap.val();
+        const currentStatus = vehicle.status || 'reserved';
+        const oldStatus = currentStatus;
+        
+        switch(currentStatus) {
+          case 'reserved':
+            if (newStatus === 'sold') {
+              openSoldPopupWithVehicle(vehicleId, vehicle);
+              e.target.value = oldStatus;
+              return;
+            } else if (newStatus === 'available') {
+              const result = await showConfirm('Remove reservation and make vehicle available?');
+              if (result) {
+                try {
+                  const updates = {
+                    status: 'available',
+                    customerName: null,
+                    customerPhone: null,
+                    customerId: null,
+                    reservedDate: null
+                  };
+                  await update(vehicleRef, updates);
+                  await showAlert('Vehicle is now available', 'Success');
+                  renderReserved();
+                } catch (error) {
+                  console.error('Error updating vehicle status:', error);
+                  await showAlert('Failed to update vehicle status', 'Error');
+                  e.target.value = oldStatus;
+                }
+              } else {
+                e.target.value = oldStatus;
+              }
+            } else {
+              e.target.value = oldStatus;
+            }
+            break;
+        }
+      });
+
+      reservedList.addEventListener('change', async e => {
+        if (!e.target.classList.contains('locationSelect')) return;
+
+        const vehicleId = e.target.dataset.id;
+        const newLocation = e.target.value;
+
+        if (!vehicleId || !newLocation) return;
+
+        try {
+          await update(ref(db, `vehicles/${vehicleId}`), {
+            location: newLocation
+          });
+        } catch (err) {
+          showAlert('Failed to update location', 'Error');
+          console.error(err);
+        }
+      });
+
+      function openSoldPopupWithVehicle(vehicleId, vehicle) {
+        selectedVehicleId = vehicleId;
+        
+        document.getElementById("soldVehicleId").textContent = vehicleId || 'N/A';
+        document.getElementById("soldBrand").textContent = vehicle.brand || 'N/A';
+        document.getElementById("soldModel").textContent = vehicle.model || 'N/A';
+        document.getElementById("soldChassis").textContent = vehicle.chassis || 'N/A';
+        document.getElementById("soldEngine").textContent = vehicle.engine || 'N/A';
+        document.getElementById("soldFuel").textContent = vehicle.fuel || 'N/A';
+        document.getElementById("soldCC").textContent = vehicle.cc || vehicle.ccValue || 'N/A';
+        document.getElementById("soldColor").textContent = vehicle.color || 'N/A';
+        document.getElementById("soldRegno").textContent = vehicle.regno || 'N/A';
+
+        resetSoldForm();
+        openSoldPopup();
+      }
+
+      function resetSoldForm() {
+        document.getElementById("buyerName").value = '';
+        document.getElementById("buyerPhone").value = '';
+        document.getElementById("buyerId").value = '';
+        document.getElementById("buyerPin").value = '';
+        document.getElementById("soldOn").value = '';
+        document.getElementById("soldType").value = '';
+        document.getElementById("insuranceAgent").value = '';
+        document.getElementById("insuranceType").value = '';
+        document.getElementById("insuranceValidFrom").value = '';
+        document.getElementById("insuranceExpiry").value = '';
+        document.getElementById("insuranceRemarks").value = '';
+      }
+
+      function openSoldPopup() {
+        const popup = document.getElementById("soldPopup");
+        if (popup) {
+          popup.style.display = "flex";
+          applyDateRules();
+          disableBodyScroll();
+        }
+      }
+
+      let __scrollY = 0;
+      function disableBodyScroll() {
+        __scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${__scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+      }
+      
+      function enableBodyScroll() {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        window.scrollTo(0, __scrollY || 0);
+      }
+
+      function applyDateRules() {
+        const today = new Date().toISOString().split("T")[0];
+        const soldOn = document.getElementById("soldOn");
+        const validFrom = document.getElementById("insuranceValidFrom");
+        const expiry = document.getElementById("insuranceExpiry");
+
+        if (soldOn) {
+          soldOn.max = today;
+          if (!soldOn.value) {
+            soldOn.value = today;
+          }
+        }
+        if (validFrom) {
+          validFrom.max = today;
+          if (!validFrom.value) {
+            validFrom.value = today;
+          }
+        }
+        if (expiry) {
+          expiry.min = today;
+        }
+      }
+
+      // Load insurance agents
+      onValue(ref(db, 'essentials/insurance_agent'), snap => {
+        const insuranceAgentSelect = document.getElementById('insuranceAgent');
+        if (!insuranceAgentSelect) return;
+
+        insuranceAgentSelect.innerHTML = '<option value="">SELECT INSURANCE AGENT</option>';
+        const data = snap.val() || {};
+
+        Object.values(data)
+          .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+          .forEach(agent => {
+            const opt = document.createElement('option');
+            opt.value = agent.name;
+            opt.textContent = agent.name.toString().toUpperCase();
+            insuranceAgentSelect.appendChild(opt);
+          });
+      });
+
+      // UPDATED: Confirm Sold Button - Updates vehicle in place, doesn't move to sold node
+      document.getElementById("confirmSoldBtn").addEventListener("click", async () => {
+        if (!selectedVehicleId) return;
+
+        const buyerName = document.getElementById("buyerName").value.trim().toUpperCase();
+        const buyerPhone = document.getElementById("buyerPhone").value.trim();
+        const buyerId = document.getElementById("buyerId").value.trim().toUpperCase();
+        const buyerPin = document.getElementById("buyerPin").value.trim().toUpperCase();
+        const soldDate = document.getElementById("soldOn").value;
+        const soldType = document.getElementById("soldType").value;
+        
+        if (!buyerName || !buyerPhone || !buyerId || !buyerPin || !soldDate || !soldType) {
+          showAlert("Please fill all required buyer information", "Error");
+          return;
+        }
+
+        const insuranceAgent = document.getElementById("insuranceAgent").value.trim();
+        const insuranceType = document.getElementById("insuranceType").value;
+        const insuranceValidFrom = document.getElementById("insuranceValidFrom").value;
+        const insuranceExpiry = document.getElementById("insuranceExpiry").value;
+        const insuranceRemarks = document.getElementById("insuranceRemarks").value.trim();
+
+        try {
+          const vehicleRef = ref(db, `vehicles/${selectedVehicleId}`);
+          const snap = await get(vehicleRef);
+          if (!snap.exists()) return;
+
+          const vehicleData = snap.val();
+          
+          // Add status history if it doesn't exist
+          if (!vehicleData.statusHistory) {
+            vehicleData.statusHistory = [];
+          }
+          
+          // Add entry to status history
+          vehicleData.statusHistory.push({
+            status: 'sold',
+            date: soldDate,
+            timestamp: Date.now(),
+            buyerInfo: {
+              buyerName,
+              buyerPhone,
+              buyerId,
+              buyerPin,
+              soldType
+            },
+            insuranceInfo: insuranceAgent ? {
+              agent: insuranceAgent,
+              type: insuranceType,
+              validFrom: insuranceValidFrom,
+              expiry: insuranceExpiry,
+              remarks: insuranceRemarks
+            } : null
+          });
+
+          // Update vehicle data with new status and sale information
+          const updates = {
+            status: 'sold',
+            soldAt: Date.now(),
+            buyerName: buyerName,
+            buyerPhone: buyerPhone,
+            buyerId: buyerId,
+            buyerPin: buyerPin,
+            soldDate: soldDate,
+            soldType: soldType,
+            insurance_agent: insuranceAgent || 'N/A',
+            insurance_type: insuranceType || 'N/A',
+            insurance_validFrom: insuranceValidFrom || 'N/A',
+            insurance_expiry: insuranceExpiry || 'N/A',
+            insurance_remarks: insuranceRemarks || 'N/A',
+            statusHistory: vehicleData.statusHistory,
+            // Clear reservation data
+            customerName: null,
+            customerPhone: null,
+            customerId: null,
+            reservedDate: null
+          };
+
+          // Update the vehicle in the same location (vehicles node)
+          await update(vehicleRef, updates);
+          
+          await showAlert(`Vehicle ID ${selectedVehicleId} marked as SOLD successfully!`);
+          
+          resetSoldForm();
+          document.getElementById("soldPopup").style.display = "none";
+          selectedVehicleId = null;
+          enableBodyScroll();
+          
+          renderReserved();
+          
+          setTimeout(() => {
+            window.location.href = 'sold.html';
+          }, 1500);
+
+        } catch (err) {
+          console.error(err);
+          showAlert("Error while updating vehicle status", "Error");
+        }
+      });
+
+      document.getElementById("cancelSoldBtn").onclick = () => {
+        resetSoldForm();
+        document.getElementById("soldPopup").style.display = "none";
+        selectedVehicleId = null;
+        enableBodyScroll();
+      };
+
+      document.getElementById("soldPopup").addEventListener('click', function(e) {
+        if (e.target === this) {
+          this.style.display = 'none';
+          enableBodyScroll();
+        }
+      });
+    </script>
+  </div>
+
+  <style>
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 750px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: minmax(25px, auto);
+      gap: 5px 10px;
+      margin-bottom: 10px;
+    }
+    
+    .two-column-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
+    
+    .single-column-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+    }
+    
+    .sold-section {
+      border: 1px solid #e0e0e0;
+      padding: 12px;
+      border-radius: 6px;
+      background: #fafafa;
+      margin-bottom: 10px;
+    }
+    
+    .sold-section h3 {
+      margin-bottom: 10px;
+      font-size: 16px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+    
+    .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    #confirmSoldBtn {
+      background-color: #28a745;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #confirmSoldBtn:hover {
+      background-color: #218838;
+    }
+    
+    #cancelSoldBtn {
+      background-color: #6c757d;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    #cancelSoldBtn:hover {
+      background-color: #5a6268;
+    }
+    
+    @media (max-width: 768px) {
+      .popup-content {
+        width: 95%;
+        padding: 15px;
+      }
+      .vehicle-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .two-column-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</body>
+</html>

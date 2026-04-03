@@ -1,0 +1,1429 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Logbooks</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  <!-- Add required libraries for download functionality -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  
+  <style>
+    /* Main container - matching stock page */
+    .logbook-card {
+      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+      page-break-inside: avoid; /* Prevent cards from breaking across pages */
+    }
+
+    /* Status badge styles */
+    .status-available {
+      background-color: #d4edda !important;
+      color: #155724 !important;
+      border: 1px solid #c3e6cb !important;
+    }
+    
+    .status-reserved {
+      background-color: #fff3cd !important;
+      color: #856404 !important;
+      border: 1px solid #ffeeba !important;
+    }
+    
+    .status-sold {
+      background-color: #cce5ff !important;
+      color: #004085 !important;
+      border: 1px solid #b8daff !important;
+    }
+    
+    .status-repossessed {
+      background-color: #f8d7da !important;
+      color: #721c24 !important;
+      border: 1px solid #f5c6cb !important;
+    }
+    
+    .status-delivered {
+      background-color: #d1e7dd !important;
+      color: #0a3622 !important;
+      border: 1px solid #a3cfbb !important;
+    }
+
+    .consignee-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 5px;
+      page-break-after: avoid; /* Keep header with its content */
+    }
+
+    /* Vehicle info grid - EXACT match to stock page */
+    .vehicle-info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px 10px;
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #eee;
+      margin-bottom: 15px;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+
+    .vehicle-info-grid div {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .vehicle-info-grid b {
+      color: #555;
+      margin-right: 5px;
+    }
+
+    /* Model name red - EXACT match to stock page */
+    .model-name-red {
+      color: red;
+      font-weight: bold;
+    }
+
+    /* Logbook form section */
+    .logbook-form-section {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #eee;
+      margin-top: 15px;
+      page-break-inside: avoid;
+    }
+
+    .logbook-form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .logbook-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logbook-field strong {
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .logbook-display {
+      padding: 8px 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-weight: bold;
+      color: #333;
+    }
+
+    /* Status display */
+    .status-display {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      text-transform: uppercase;
+      display: inline-block;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Form elements */
+    .logbook-form-section input,
+    .logbook-form-section textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 13px;
+    }
+
+    .logbook-form-section input:focus,
+    .logbook-form-section textarea:focus {
+      outline: none;
+      border-color: #28a745;
+      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+    }
+
+    .logbook-form-section textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .logbook-form-section input:disabled,
+    .logbook-form-section textarea:disabled {
+      background-color: #f5f5f5;
+      color: #666;
+      cursor: not-allowed;
+    }
+
+    /* Full width fields */
+    .full-width {
+      grid-column: span 3;
+    }
+
+    /* Save button */
+    .form-actions {
+      margin-top: 20px;
+      text-align: right;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+
+    .saveBtn {
+      padding: 10px 24px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .saveBtn:hover:not(:disabled) {
+      background-color: #218838;
+    }
+
+    .saveBtn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* Header and search - matching stock page */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    #searchBar {
+      padding: 6px 10px;
+      padding-right: 30px;
+      font-size: 14px;
+      width: 260px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+    
+    #searchBar:focus {
+      outline: none;
+      border-color: #28a745;
+      box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
+    }
+    
+    #clearSearch {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-weight: bold;
+      color: #999;
+      display: none;
+      background: none;
+      border: none;
+      font-size: 16px;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #clearSearch:hover {
+      color: #333;
+    }
+    
+    /* Filter buttons container - matching stock page */
+    .filters-wrapper {
+      margin-bottom: 20px;
+    }
+    
+    /* Consignee filter buttons - matching stock page exactly */
+    #consigneeButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    
+    #consigneeButtons button {
+      padding: 5px 10px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    #consigneeButtons button:hover {
+      background-color: #0056b3;
+    }
+    
+    #consigneeButtons button.filter-active {
+      background-color: #dc3545 !important;
+    }
+    
+    /* Status filter buttons */
+    .status-filter-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+    
+    .status-filter-btn {
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #555;
+      transition: all 0.3s;
+    }
+    
+    .status-filter-btn:hover {
+      background: #f0f0f0;
+      border-color: #999;
+    }
+    
+    .status-filter-btn.active {
+      background: #28a745;
+      color: white;
+      border-color: #28a745;
+    }
+    
+    /* Active filters indicator - matching stock page */
+    #activeFilters {
+      margin: 10px 0;
+      display: none;
+    }
+    
+    #activeFilters span {
+      background-color: #e9ecef;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: inline-block;
+    }
+    
+    #clearAllFilters {
+      margin-left: 10px;
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    /* Download button - matching stock page */
+    #downloadBtn {
+      padding: 6px 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    #downloadBtn:hover {
+      background: #218838;
+    }
+    
+    /* Download Popup - matching stock page */
+    .popup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 90vh;
+      overflow-y: auto;
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .popup-content h3 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #28a745;
+      padding-bottom: 10px;
+    }
+    
+    #downloadPDF {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    #downloadPDF:hover {
+      background: #218838;
+    }
+    
+    #downloadExcel {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    #downloadExcel:hover {
+      background: #0056b3;
+    }
+    
+    #closeDownloadPopup {
+      width: 100%;
+      padding: 10px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    #closeDownloadPopup:hover {
+      background: #5a6268;
+    }
+    
+    /* No logbooks message */
+    .no-logbooks {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 16px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+    
+    /* Highlight search results - matching stock page */
+    .highlight-search {
+      background: yellow;
+      font-weight: bold;
+      padding: 2px;
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    #logbookCount {
+      font-size: 18px;
+      font-weight: normal;
+      color: #555;
+      margin-left: 8px;
+    }
+    
+    /* Custom Alert Modal - matching stock page */
+    .custom-alert {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    }
+    
+    .alert-content {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .alert-title {
+      background: #28a745;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    
+    .alert-message {
+      padding: 30px 20px;
+      text-align: center;
+      font-size: 16px;
+      color: #333;
+    }
+    
+    .alert-button {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border-top: 1px solid #ddd;
+    }
+    
+    .alert-button:hover {
+      background: #218838;
+    }
+    
+    /* Vehicle ID style */
+    .vehicle-id {
+      color: #0066cc;
+      font-weight: bold;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      #searchBar {
+        width: 100%;
+      }
+      
+      .header-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .vehicle-info-grid,
+      .logbook-form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .full-width {
+        grid-column: span 2;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .status-filter-container {
+        flex-direction: column;
+      }
+      
+      .status-filter-btn {
+        width: 100%;
+      }
+      
+      .vehicle-info-grid,
+      .logbook-form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .full-width {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Custom Alert Dialog - matching stock page -->
+  <div id="customAlert" class="custom-alert">
+    <div class="alert-content">
+      <div class="alert-title" id="alertTitle">Alert</div>
+      <div class="alert-message" id="alertMessage"></div>
+      <button class="alert-button" id="alertOkButton">OK</button>
+    </div>
+  </div>
+
+  <!-- Download Popup - matching stock page -->
+  <div id="downloadPopup" class="popup">
+    <div class="popup-content">
+      <h3>SELECT FILE TYPE</h3>
+      <button id="downloadPDF">DOWNLOAD PDF</button>
+      <button id="downloadExcel">DOWNLOAD EXCEL</button>
+      <button id="closeDownloadPopup">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Sidebar - matching stock page -->
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+    <a href="dashboard.html">DASHBOARD</a>
+    <a href="onTheWay.html">On The Way</a>
+    <a href="stock.html">STOCK</a>
+    <a href="reserved.html">RESERVED</a>
+    <a href="repossessed.html">REPOSSESSED</a>
+    <a href="sold.html">SOLD</a>
+    <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+    <a href="logbooks.html" class="active">LOGBOOKS</a>
+    <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header>
+      <div class="header-left">
+        <h1>LOGBOOKS RECORDS <span id="logbookCount">(0)</span></h1>
+      </div>
+      
+      <div style="display: flex; gap: 10px;">
+        <div class="search-container">
+          <input type="text" 
+                 id="searchBar" 
+                 placeholder="SEARCH BY ANY FIELD...">
+          <span id="clearSearch" style="display: none;">✕</span>
+        </div>
+        <button id="downloadBtn">DOWNLOAD</button>
+      </div>
+    </header>
+
+    <!-- Filter sections -->
+    <div class="filters-wrapper">
+      <!-- Consignee filter buttons - EXACTLY like stock page -->
+      <div id="consigneeButtons"></div>
+      
+      <!-- Status filter buttons -->
+      <div class="status-filter-container">
+        <button class="status-filter-btn active" data-filter="all">ALL LOGBOOKS</button>
+        <button class="status-filter-btn" data-filter="available">AVAILABLE</button>
+        <button class="status-filter-btn" data-filter="delivered">DELIVERED</button>
+      </div>
+    </div>
+
+    <!-- Active filters indicator - matching stock page -->
+    <div id="activeFilters" style="display: none;">
+      <span>
+        <span id="filterDescription"></span>
+        <button id="clearAllFilters">✕</button>
+      </span>
+    </div>
+
+    <div id="logbookList">
+      <p>Loading logbooks...</p>
+    </div>
+  </div>
+
+  <script type="module">
+  import { db, ref, onValue, update } from '../firebase.js';
+
+  // DOM Elements
+  const logbookList = document.getElementById('logbookList');
+  const logbookCount = document.getElementById('logbookCount');
+  const searchBar = document.getElementById('searchBar');
+  const clearSearch = document.getElementById('clearSearch');
+  const consigneeButtonsDiv = document.getElementById('consigneeButtons');
+  const statusFilterButtons = document.querySelectorAll('.status-filter-btn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const downloadPopup = document.getElementById('downloadPopup');
+  const closeDownloadPopup = document.getElementById('closeDownloadPopup');
+  const activeFilters = document.getElementById('activeFilters');
+  const filterDescription = document.getElementById('filterDescription');
+  const clearAllFilters = document.getElementById('clearAllFilters');
+  
+  // State variables
+  let vehiclesData = {};
+  let currentConsigneeFilter = '';  // New consignee filter
+  let currentStatusFilter = 'all';   // Renamed from currentFilter
+  let searchQuery = '';
+  let filteredVehicles = [];
+
+  // Today's date for validation
+  const today = new Date().toISOString().split('T')[0];
+
+  // ============ HELPER FUNCTIONS ============
+
+  function showAlert(message, title = "Alert") {
+    return new Promise(resolve => {
+      const alert = document.getElementById('customAlert');
+      const alertTitle = document.getElementById('alertTitle');
+      const alertMessage = document.getElementById('alertMessage');
+      const alertOkButton = document.getElementById('alertOkButton');
+      
+      alertTitle.textContent = title;
+      alertMessage.textContent = message;
+      alertOkButton.textContent = 'OK';
+      
+      alert.style.display = 'flex';
+      
+      const closeAlert = () => {
+        alert.style.display = 'none';
+        resolve();
+      };
+      
+      alertOkButton.onclick = closeAlert;
+      alert.onclick = (e) => {
+        if (e.target === alert) closeAlert();
+      };
+    });
+  }
+
+  function formatDisplayDate(raw) {
+    if (!raw) return 'N/A';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      const d = new Date(raw);
+      if (!isNaN(d.getTime())) {
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+      }
+    }
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        return `${String(parsed.getDate()).padStart(2,'0')} ${months[parsed.getMonth()]} ${String(parsed.getFullYear()).slice(2)}`;
+      }
+      return String(raw).toUpperCase();
+    }
+
+    function escapeRegExp(string) {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function highlight(text, query) {
+      if (!query || !text) return text;
+      const pattern = escapeRegExp(query);
+      const regex = new RegExp(`(${pattern})`, 'gi');
+      return (text + '').replace(regex, '<span class="highlight-search">$1</span>');
+    }
+
+    function hasLogbook(vehicle) {
+      const logbook = (vehicle.logbook || '').toString().trim();
+      return logbook !== '' && logbook !== 'N/A' && logbook !== 'undefined' && logbook !== 'null';
+    }
+
+    // Get logbook delivery info directly from vehicle
+    function getLogbookDeliveryInfo(vehicle) {
+      return {
+        status: vehicle.logbookDelivered ? 'delivered' : 'available',
+        deliveredTo: vehicle.logbookDeliveredTo || '',
+        deliveredOn: vehicle.logbookDeliveredOn || '',
+        remarks: vehicle.logbookDeliveryRemarks || '',
+        completed: vehicle.logbookDeliveryCompleted || false
+      };
+    }
+
+    // Get status display for LOGBOOK STATUS - ONLY AVAILABLE or DELIVERED
+    function getLogbookStatusDisplay(logbookStatus) {
+      if (logbookStatus === 'delivered') {
+        return '<span class="status-display status-delivered">DELIVERED</span>';
+      }
+      return '<span class="status-display status-available">AVAILABLE</span>';
+    }
+
+    // Get vehicle status class for styling
+    function getVehicleStatusClass(status) {
+      switch(status?.toLowerCase()) {
+        case 'available': return 'status-available';
+        case 'reserved': return 'status-reserved';
+        case 'sold': return 'status-sold';
+        case 'repossessed': return 'status-repossessed';
+        default: return 'status-available';
+      }
+    }
+
+    // Get formatted vehicle status for display in remarks column
+    function getFormattedVehicleStatus(status) {
+      if (!status) return 'AVAILABLE';
+      return status.toString().toUpperCase();
+    }
+
+    // Get current date string for filename
+    function getCurrentDateString() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    // Get filtered filename
+    function getFilteredFilename(extension) {
+      let parts = ["Logbook_Report"];
+      if (currentConsigneeFilter) {
+        parts.push(currentConsigneeFilter.replace(/\s+/g, "_"));
+      }
+      if (currentStatusFilter !== 'all') {
+        parts.push(currentStatusFilter.toUpperCase());
+      }
+      parts.push(getCurrentDateString());
+      return parts.join("_") + extension;
+    }
+
+    // Update active filters display - matching stock page
+    function updateActiveFiltersDisplay() {
+      const filters = [];
+      
+      if (currentConsigneeFilter) {
+        filters.push(`Consignee: ${currentConsigneeFilter}`);
+      }
+      
+      if (currentStatusFilter !== 'all') {
+        filters.push(`Status: ${currentStatusFilter.toUpperCase()}`);
+      }
+      
+      if (searchQuery) {
+        filters.push(`Search: "${searchQuery}"`);
+      }
+      
+      if (filters.length > 0) {
+        filterDescription.textContent = `Active filters: ${filters.join(' | ')}`;
+        activeFilters.style.display = 'block';
+      } else {
+        activeFilters.style.display = 'none';
+      }
+    }
+
+    // ============ RENDER CONSIGNEE BUTTONS ============
+    function renderConsigneeButtons() {
+      consigneeButtonsDiv.innerHTML = "";
+      
+      // Get all vehicles with logbooks
+      const vehiclesWithLogbooks = Object.values(vehiclesData || {}).filter(hasLogbook);
+      
+      const allBtn = document.createElement("button");
+      allBtn.textContent = "ALL";
+      allBtn.onclick = () => {
+        currentConsigneeFilter = "";
+        renderConsigneeButtons();
+        renderLogbooks();
+      };
+      if (!currentConsigneeFilter) allBtn.classList.add("filter-active");
+      consigneeButtonsDiv.appendChild(allBtn);
+
+      // Get consignees from vehicles with logbooks
+      const consignees = [...new Set(vehiclesWithLogbooks
+        .map(v => (v?.consignee || '').toString().trim().toUpperCase())
+        .filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b));
+
+      consignees.forEach(name => {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        if (currentConsigneeFilter === name) btn.classList.add("filter-active");
+        btn.onclick = () => {
+          currentConsigneeFilter = name;
+          renderConsigneeButtons();
+          renderLogbooks();
+        };
+        consigneeButtonsDiv.appendChild(btn);
+      });
+    }
+
+    // ============ DATA FETCHING ============
+
+    // Fetch all vehicles - get ALL vehicles with logbooks
+    onValue(ref(db, 'vehicles'), (snap) => {
+      vehiclesData = snap.val() || {};
+      renderConsigneeButtons();
+      renderLogbooks();
+    });
+
+    // ============ RENDER FUNCTION ============
+
+    function renderLogbooks() {
+      logbookList.innerHTML = '';
+
+      // Get ALL vehicles that have logbooks, regardless of status
+      let vehicles = Object.entries(vehiclesData || {})
+        .filter(([_, vehicle]) => hasLogbook(vehicle));
+
+      if (vehicles.length === 0) {
+        logbookList.innerHTML = `
+          <div class="no-logbooks">
+            <h3>No Vehicles with Logbooks Found</h3>
+            <p>Add logbook information to vehicles in the Add New Vehicle page to see them here.</p>
+          </div>
+        `;
+        logbookCount.textContent = '(0)';
+        updateActiveFiltersDisplay();
+        return;
+      }
+
+      // Apply consignee filter
+      if (currentConsigneeFilter) {
+        vehicles = vehicles.filter(([_, v]) => 
+          (v.consignee || '').toString().trim().toUpperCase() === currentConsigneeFilter
+        );
+      }
+
+      // Apply logbook status filter (delivered/available)
+      if (currentStatusFilter !== 'all') {
+        vehicles = vehicles.filter(([_, vehicle]) => {
+          const deliveryInfo = getLogbookDeliveryInfo(vehicle);
+          return deliveryInfo.status === currentStatusFilter;
+        });
+      }
+
+      // Apply search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        vehicles = vehicles.filter(([_, v]) => {
+          const searchableFields = [
+            v.brand, v.model, v.supplier, v.consignee, v.receivingDate,
+            v.chassis, v.engine, v.shift, v.drive, v.fuel, v.color,
+            v.modelYearMonth, v.cc || v.ccValue, v.package || v.packageValue,
+            v.mileage, v.regno, v.logbook, v.location, v.remarks, v.id,
+            v.status
+          ];
+          return searchableFields.some(field =>
+            String(field || '').toLowerCase().includes(query)
+          );
+        });
+      }
+
+      // Sort by consignee then logbook
+      vehicles.sort(([idA, a], [idB, b]) => {
+        const consigneeA = (a.consignee || '').toString().toUpperCase();
+        const consigneeB = (b.consignee || '').toString().toUpperCase();
+        if (consigneeA !== consigneeB) return consigneeA.localeCompare(consigneeB);
+        
+        const logbookA = (a.logbook || '').toString().toUpperCase();
+        const logbookB = (b.logbook || '').toString().toUpperCase();
+        return logbookA.localeCompare(logbookB);
+      });
+
+      filteredVehicles = vehicles;
+      logbookCount.textContent = `(${vehicles.length})`;
+      updateActiveFiltersDisplay();
+
+      // Render each vehicle
+      vehicles.forEach(([id, vehicle]) => {
+        const deliveryInfo = getLogbookDeliveryInfo(vehicle);
+        const isCompleted = deliveryInfo.completed;
+        const vehicleStatus = vehicle.status || 'available';
+        const vehicleStatusClass = getVehicleStatusClass(vehicleStatus);
+        
+        // Get values with defaults
+        const brand = (vehicle.brand || 'N/A').toString().toUpperCase();
+        const model = (vehicle.model || 'N/A').toString().toUpperCase();
+        const consignee = (vehicle.consignee || 'N/A').toString().toUpperCase();
+        const chassis = (vehicle.chassis || 'N/A').toString().toUpperCase();
+        const engine = (vehicle.engine || 'N/A').toString().toUpperCase();
+        const shift = (vehicle.shift || 'N/A').toString().toUpperCase();
+        const drive = (vehicle.drive || 'N/A').toString().toUpperCase();
+        const fuel = (vehicle.fuel || 'N/A').toString().toUpperCase();
+        const color = (vehicle.color || 'N/A').toString().toUpperCase();
+        const year = (vehicle.modelYearMonth || 'N/A').toString().toUpperCase();
+        const ccValue = (vehicle.cc || vehicle.ccValue || 'N/A').toString().toUpperCase();
+        const packageValue = (vehicle.package || vehicle.packageValue || 'STANDARD').toString().toUpperCase();
+        const mileage = (vehicle.mileage || 'N/A').toString().toUpperCase();
+        const regno = (vehicle.regno || 'N/A').toString().toUpperCase();
+        const location = (vehicle.location || 'N/A').toString().toUpperCase();
+        const remarks = (vehicle.remarks || 'N/A').toString().toUpperCase();
+        const logbookNumber = (vehicle.logbook || '').toString().toUpperCase();
+        const receivingDate = formatDisplayDate(vehicle.receivingDate);
+
+        const div = document.createElement('div');
+        div.className = 'logbook-card';
+
+        div.innerHTML = `
+          <!-- Consignee Header with Vehicle Status Badge -->
+          <div class="consignee-header">
+            <div>
+              ${highlight(consignee, searchQuery)}
+              <div style="font-size: 14px; margin-top: 5px;">
+                <span style="color: #666;">LOGBOOK:</span> ${highlight(logbookNumber, searchQuery)} | 
+                <span style="color: #666;">ID:</span> ${highlight(id, searchQuery)}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <!-- Vehicle Status Badge - shows where vehicle is -->
+              <span class="status-display ${vehicleStatusClass}" style="padding: 4px 12px; border-radius: 4px; font-weight: bold;">
+                ${vehicleStatus.toUpperCase()}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Vehicle Information Grid -->
+          <div class="vehicle-info-grid">
+            <div title="${brand}"><b>BRAND:</b> ${highlight(brand, searchQuery)}</div>
+            <div title="${model}"><b>MODEL:</b> ${highlight(model, searchQuery)}</div>
+            <div title="${chassis}"><b>CHASSIS NO:</b> ${highlight(chassis, searchQuery)}</div>
+            <div title="${engine}"><b>ENGINE NO:</b> ${highlight(engine, searchQuery)}</div>
+            <div title="${fuel}"><b>FUEL:</b> ${highlight(fuel, searchQuery)}</div>
+            <div title="${color}"><b>COLOR:</b> ${highlight(color, searchQuery)}</div>
+            <div title="${ccValue}"><b>CC:</b> ${highlight(ccValue, searchQuery)}</div>
+            <div title="${regno}"><b>REG NO:</b> ${highlight(regno, searchQuery)}</div>
+          </div>
+          
+          <!-- Logbook Status Form -->
+          <div class="logbook-form-section">
+            <div class="logbook-form-grid">
+              <div class="logbook-field">
+                <strong>LOGBOOK NUMBER</strong>
+                <div class="logbook-display">
+                  ${highlight(logbookNumber, searchQuery)}
+                </div>
+              </div>
+              
+              <div class="logbook-field">
+                <strong>LOGBOOK STATUS</strong>
+                <div id="statusDisplay-${id}">
+                  ${getLogbookStatusDisplay(deliveryInfo.status)}
+                </div>
+              </div>
+              
+              <div class="logbook-field">
+                <strong>DELIVERY DATE *</strong>
+                <input type="date" 
+                       id="deliveredOn-${id}" 
+                       max="${today}" 
+                       value="${deliveryInfo.deliveredOn || ''}"
+                       ${isCompleted ? 'disabled' : ''}
+                       placeholder="YYYY-MM-DD">
+              </div>
+              
+              <div class="logbook-field full-width">
+                <strong>DELIVERED TO *</strong>
+                <input type="text" 
+                       id="deliveredTo-${id}" 
+                       value="${deliveryInfo.deliveredTo || ''}" 
+                       placeholder="Enter name of person/company logbook was delivered to"
+                       ${isCompleted ? 'disabled' : ''}>
+              </div>
+              
+              <div class="logbook-field full-width">
+                <strong>REMARKS</strong>
+                <textarea id="remarks-${id}" 
+                          placeholder="Any additional remarks about the logbook delivery"
+                          ${isCompleted ? 'disabled' : ''}
+                          rows="3">${deliveryInfo.remarks || ''}</textarea>
+              </div>
+            </div>
+            
+            <!-- Save button -->
+            <div class="form-actions">
+              <button data-id="${id}" class="saveBtn" 
+                      ${isCompleted ? 'disabled' : ''}>
+                ${isCompleted ? 'DELIVERY COMPLETED' : 'SAVE DELIVERY INFORMATION'}
+              </button>
+            </div>
+          </div>
+        `;
+
+        logbookList.appendChild(div);
+      });
+    }
+
+    // ============ DOWNLOAD FUNCTIONS ============
+
+    // Build HTML for PDF export with exact image format - GROUPED BY CONSIGNEE
+    function buildExportHTML() {
+      const now = new Date();
+      const day = now.getDate();
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const month = monthNames[now.getMonth()];
+      const year = now.getFullYear();
+
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      const formattedDate = `${day}-${month}-${year} ${hours}:${minutes} ${ampm}`;
+
+      let html = `
+        <div style="font-family: Arial, sans-serif; margin: 15px;">
+          <h1 style="text-align:center; margin-bottom:5px; font-size: 22px;">ITTEHAD AUTO CONSULTANTS LTD</h1>
+          <h2 style="text-align:center; margin-top:0; font-size: 16px; color: #333;">LOGBOOKS REPORT</h2>
+          <p style="text-align:right; font-size:9px; margin-top:0; margin-bottom:15px; color: #666;">
+            Generated: ${formattedDate} | Status: ${currentStatusFilter.toUpperCase()}${currentConsigneeFilter ? ` | Consignee: ${currentConsigneeFilter}` : ''}
+          </p>
+      `;
+
+      // Group vehicles by consignee
+      const consigneeGroups = {};
+      filteredVehicles.forEach(([id, vehicle]) => {
+        const consignee = (vehicle.consignee || 'UNKNOWN CONSIGNEE').toString().toUpperCase();
+        if (!consigneeGroups[consignee]) {
+          consigneeGroups[consignee] = [];
+        }
+        consigneeGroups[consignee].push([id, vehicle]);
+      });
+
+      // Sort consignees alphabetically
+      const sortedConsignees = Object.keys(consigneeGroups).sort();
+
+      // Generate table for each consignee group
+      sortedConsignees.forEach((consignee, groupIndex) => {
+        const vehicles = consigneeGroups[consignee];
+        
+        // Add consignee header with page break control
+        html += `
+          <div style="margin-top: ${groupIndex > 0 ? '20px' : '0'}; page-break-before: ${groupIndex > 0 ? 'auto' : 'auto'};">
+            <h3 style="font-size: 14px; color: #28a745; border-bottom: 2px solid #28a745; padding-bottom: 3px; margin-bottom: 8px;">
+               ${consignee}
+            </h3>
+          </div>
+          
+          <table style="width:100%; border-collapse:collapse; font-size:9px; border: 1px solid #000; margin-bottom: 5px; page-break-inside: auto;">
+            <thead style="background:#f0f0f0; font-weight:bold; display:table-header-group;">
+              <tr>
+                <th style="width:5%; padding: 4px; text-align:center; border:1px solid #000;">SR #</th>
+                <th style="width:15%; padding: 4px; text-align:left; border:1px solid #000;">BRAND</th>
+                <th style="width:15%; padding: 4px; text-align:left; border:1px solid #000;">MODEL</th>
+                <th style="width:12%; padding: 4px; text-align:left; border:1px solid #000;">REG</th>
+                <th style="width:18%; padding: 4px; text-align:left; border:1px solid #000;">LOGBOOK#</th>
+                <th style="width:10%; padding: 4px; text-align:center; border:1px solid #000;">STATUS</th>
+                <th style="width:25%; padding: 4px; text-align:left; border:1px solid #000;">REMARKS</th>
+               </tr>
+            </thead>
+            <tbody style="page-break-inside: auto;">
+        `;
+
+        // Add rows for this consignee
+        vehicles.forEach(([id, vehicle], index) => {
+          const deliveryInfo = getLogbookDeliveryInfo(vehicle);
+          const logbookStatus = deliveryInfo.status === 'delivered' ? 'DELIVERED' : 'AVAILABLE';
+          // Get vehicle status for remarks column - this shows where the car is (available, reserved, sold, repossessed)
+          const vehicleStatus = getFormattedVehicleStatus(vehicle.status);
+          
+          html += `
+            <tr style="page-break-inside: avoid;">
+              <td style="padding: 3px 4px; text-align:center; border:1px solid #000;">${index + 1}</td>
+              <td style="padding: 3px 4px; text-align:left; border:1px solid #000;">${(vehicle.brand || 'N/A').toString().toUpperCase()}</td>
+              <td style="padding: 3px 4px; text-align:left; border:1px solid #000;">${(vehicle.model || 'N/A').toString().toUpperCase()}</td>
+              <td style="padding: 3px 4px; text-align:left; border:1px solid #000;">${(vehicle.regno || 'N/A').toString().toUpperCase()}</td>
+              <td style="padding: 3px 4px; text-align:left; border:1px solid #000;">${(vehicle.logbook || 'N/A').toString().toUpperCase()}</td>
+              <td style="padding: 3px 4px; text-align:center; font-weight:bold; border:1px solid #000; ${logbookStatus === 'DELIVERED' ? 'color:#0a3622;' : 'color:#155724;'}">${logbookStatus}</td>
+              <td style="padding: 3px 4px; text-align:left; border:1px solid #000;">${vehicleStatus}</td>
+            </tr>
+          `;
+        });
+
+        html += `</tbody>`;
+      });
+
+      html += `
+          <p style="text-align:center; font-size:8px; margin-top:10px; color:#666; page-break-before: avoid;">
+            End of Report - ${filteredVehicles.length} Total Logbooks
+          </p>
+        </div>
+      `;
+      
+      return html;
+    }
+
+    // Build Excel data with exact image format - GROUPED BY CONSIGNEE
+    function buildExcelData() {
+      const wsData = [];
+      
+      // Group vehicles by consignee
+      const consigneeGroups = {};
+      filteredVehicles.forEach(([id, vehicle]) => {
+        const consignee = (vehicle.consignee || 'UNKNOWN CONSIGNEE').toString().toUpperCase();
+        if (!consigneeGroups[consignee]) {
+          consigneeGroups[consignee] = [];
+        }
+        consigneeGroups[consignee].push([id, vehicle]);
+      });
+
+      // Sort consignees alphabetically
+      const sortedConsignees = Object.keys(consigneeGroups).sort();
+
+      // Generate data for each consignee group
+      sortedConsignees.forEach((consignee) => {
+        const vehicles = consigneeGroups[consignee];
+        
+        // Add consignee header row (merge cells will be handled by formatting later)
+        wsData.push([` ${consignee}`, "", "", "", "", "", ""]);
+        
+        // Add header row
+        wsData.push(["SR #", "BRAND", "MODEL", "REG", "LOGBOOK#", "STATUS", "REMARKS"]);
+        
+        // Add vehicle rows for this consignee
+        vehicles.forEach(([id, vehicle], index) => {
+          const deliveryInfo = getLogbookDeliveryInfo(vehicle);
+          const logbookStatus = deliveryInfo.status === 'delivered' ? 'DELIVERED' : 'AVAILABLE';
+          // Get vehicle status for remarks column - this shows where the car is (available, reserved, sold, repossessed)
+          const vehicleStatus = getFormattedVehicleStatus(vehicle.status);
+          
+          wsData.push([
+            (index + 1).toString(),
+            (vehicle.brand || 'N/A').toString().toUpperCase(),
+            (vehicle.model || 'N/A').toString().toUpperCase(),
+            (vehicle.regno || 'N/A').toString().toUpperCase(),
+            (vehicle.logbook || 'N/A').toString().toUpperCase(),
+            logbookStatus,
+            vehicleStatus
+          ]);
+        });
+        
+        // Add two empty rows between consignee groups for better separation
+        wsData.push([]);
+        wsData.push([]);
+      });
+      
+      return wsData;
+    }
+
+    // ============ EVENT HANDLERS ============
+
+    searchBar.addEventListener('input', () => {
+      searchQuery = searchBar.value.trim();
+      clearSearch.style.display = searchQuery ? 'block' : 'none';
+      renderLogbooks();
+    });
+
+    clearSearch.addEventListener('click', () => {
+      searchBar.value = '';
+      searchQuery = '';
+      clearSearch.style.display = 'none';
+      renderLogbooks();
+    });
+
+    statusFilterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        statusFilterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentStatusFilter = btn.dataset.filter;
+        renderLogbooks();
+      });
+    });
+
+    // Clear all filters - matching stock page
+    clearAllFilters.addEventListener('click', () => {
+      currentConsigneeFilter = '';
+      currentStatusFilter = 'all';
+      searchQuery = '';
+      searchBar.value = '';
+      clearSearch.style.display = 'none';
+      
+      // Update status filter buttons
+      statusFilterButtons.forEach(b => {
+        b.classList.remove('active');
+        if (b.dataset.filter === 'all') {
+          b.classList.add('active');
+        }
+      });
+      
+      renderConsigneeButtons();
+      renderLogbooks();
+    });
+
+    // Download button click handler
+    downloadBtn.addEventListener('click', () => {
+      if (filteredVehicles.length === 0) {
+        showAlert('No logbooks to download', 'Alert');
+        return;
+      }
+      downloadPopup.style.display = 'flex';
+    });
+
+    // Close download popup
+    closeDownloadPopup.addEventListener('click', () => {
+      downloadPopup.style.display = 'none';
+    });
+
+    // Close popup when clicking outside
+    downloadPopup.addEventListener('click', (e) => {
+      if (e.target === downloadPopup) {
+        downloadPopup.style.display = 'none';
+      }
+    });
+
+    // PDF download handler
+    document.getElementById('downloadPDF').addEventListener('click', () => {
+      const html = buildExportHTML();
+      const filename = getFilteredFilename(".pdf");
+
+      // Configure html2pdf with better pagination settings
+      const opt = {
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          letterRendering: true,
+          useCORS: true,
+          logging: false
+        },
+        jsPDF: { 
+          unit: 'in', 
+          format: 'a4', 
+          orientation: 'landscape',
+          compress: true
+        },
+        pagebreak: { 
+          mode: ['css', 'legacy'],
+          before: '.page_before',
+          after: '.page_after',
+          avoid: 'tr'
+        }
+      };
+
+      html2pdf().set(opt).from(html).save();
+      downloadPopup.style.display = 'none';
+    });
+
+    // Excel download handler
+    document.getElementById('downloadExcel').addEventListener('click', () => {
+      const wsData = buildExcelData();
+      const filename = getFilteredFilename(".xlsx");
+      
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Set column widths
+      const colWidths = [
+        { wch: 5 },   // SR #
+        { wch: 12 },  // BRAND
+        { wch: 15 },  // MODEL
+        { wch: 12 },  // REG
+        { wch: 18 },  // LOGBOOK#
+        { wch: 12 },  // STATUS
+        { wch: 40 }   // REMARKS
+      ];
+      ws['!cols'] = colWidths;
+      
+      XLSX.utils.book_append_sheet(wb, ws, "Logbooks by Consignee");
+      XLSX.writeFile(wb, filename);
+
+      downloadPopup.style.display = 'none';
+    });
+
+    // Save button handler with MANDATORY VALIDATION for Delivered To and Delivery Date
+    logbookList.addEventListener('click', async (e) => {
+      const id = e.target.dataset.id;
+      if (!id || !e.target.classList.contains('saveBtn')) return;
+
+      try {
+        const deliveredOn = document.getElementById(`deliveredOn-${id}`).value;
+        const deliveredTo = document.getElementById(`deliveredTo-${id}`).value.trim();
+        const remarks = document.getElementById(`remarks-${id}`).value.trim() || '';
+
+        // ========== MANDATORY VALIDATION ==========
+        // Check if Delivered To is filled
+        if (!deliveredTo) {
+          await showAlert('⚠️ "DELIVERED TO" is required. Please enter who the logbook was delivered to.', 'Validation Error');
+          document.getElementById(`deliveredTo-${id}`).focus();
+          return;
+        }
+
+        // Check if Delivery Date is filled
+        if (!deliveredOn) {
+          await showAlert('⚠️ "DELIVERY DATE" is required. Please select the delivery date.', 'Validation Error');
+          document.getElementById(`deliveredOn-${id}`).focus();
+          return;
+        }
+
+        // Validate date is not in future
+        const deliveredDate = new Date(deliveredOn);
+        const todayDate = new Date(today);
+        if (deliveredDate > todayDate) {
+          await showAlert('Delivery date cannot be in the future.', 'Validation Error');
+          return;
+        }
+
+        // Update vehicle with logbook delivery information
+        const vehicleRef = ref(db, `vehicles/${id}`);
+        await update(vehicleRef, {
+          logbookDelivered: true,
+          logbookDeliveredTo: deliveredTo,
+          logbookDeliveredOn: deliveredOn || '',
+          logbookDeliveryRemarks: remarks,
+          logbookDeliveryCompleted: true,
+          logbookDeliveryUpdatedAt: new Date().toISOString()
+        });
+
+        // Update UI without full re-render
+        const statusDisplay = document.getElementById(`statusDisplay-${id}`);
+        if (statusDisplay) {
+          statusDisplay.innerHTML = getLogbookStatusDisplay('delivered');
+        }
+
+        // Disable form fields
+        ['deliveredOn', 'deliveredTo', 'remarks'].forEach(field => {
+          const el = document.getElementById(`${field}-${id}`);
+          if (el) el.disabled = true;
+        });
+
+        // Disable save button
+        e.target.disabled = true;
+        e.target.textContent = 'DELIVERY COMPLETED';
+
+        await showAlert('✓ Logbook delivery information saved successfully!', 'Success');
+
+      } catch (error) {
+        console.error('Error saving logbook:', error);
+        await showAlert('Error saving changes. Please try again.', 'Error');
+      }
+    });
+
+    logbookList.addEventListener('input', (e) => {
+      if (e.target.type === 'date' && e.target.id.includes('deliveredOn-')) {
+        if (e.target.value > today) {
+          e.target.value = today;
+          showAlert('Date cannot be in the future', 'Validation');
+        }
+      }
+    });
+
+    renderLogbooks();
+  </script>
+</body>
+</html>

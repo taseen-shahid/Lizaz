@@ -1,0 +1,986 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Number Plates</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+  <style>
+    .vehicle-box {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+    }
+    .consignee-header {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    .vehicle-details-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px 20px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+
+    .vehicle-details-grid div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 30px;
+    }
+
+    .vehicle-details-grid b {
+      min-width: 80px;
+      display: inline-block;
+      color: #555;
+    }
+    .form-section {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      border: 1px solid #eee;
+      margin-top: 15px;
+    }
+    .form-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .form-group {
+      flex: 1;
+      min-width: 200px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+      color: #555;
+    }
+    input, select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    input:disabled, select:disabled {
+      background-color: #f5f5f5;
+      color: #666;
+      cursor: not-allowed;
+    }
+    button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .saveBtn {
+      background-color: #28a745;
+      color: white;
+    }
+    .saveBtn:hover:not(:disabled) {
+      background-color: #218838;
+    }
+    .saveBtn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    .no-plates {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 16px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .plate-header {
+      background: #007bff;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .plate-number {
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .received-date {
+      font-size: 14px;
+    }
+    .completed-badge {
+      background-color: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
+    /* Registration number lock indicator */
+    .reg-lock-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 8px;
+      padding: 2px 6px;
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #28a745;
+    }
+    
+    .reg-lock-icon {
+      font-size: 12px;
+    }
+    
+    /* Locked registration field styling */
+    .locked-field {
+      background-color: #f8f9fa !important;
+      color: #6c757d !important;
+      cursor: not-allowed !important;
+      border-color: #dee2e6 !important;
+    }
+    
+    /* Custom Alert Modal Styles */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      display: none;
+    }
+    .popup-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    /* Header with search bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .search-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    
+    #searchBar {
+      padding: 8px 12px;
+      padding-right: 30px;
+      font-size: 14px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+    
+    #searchBar:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+    
+    #clearSearch {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-weight: bold;
+      color: #999;
+      display: none;
+      background: none;
+      border: none;
+      font-size: 16px;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    #clearSearch:hover {
+      color: #333;
+    }
+    
+    /* Highlight search results */
+    .highlight-search {
+      background-color: yellow;
+      font-weight: bold;
+      padding: 1px 2px;
+      border-radius: 2px;
+    }
+    
+    .plate-number.highlighted {
+      background-color: #ffeb3b;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      #searchBar {
+        width: 100%;
+      }
+      
+      .header-left {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>LIZAZ ENTERPRISE LTD</h2>
+  <a href="dashboard.html">DASHBOARD</a>
+  <a href="onTheWay.html">On The Way</a>
+  <a href="stock.html">STOCK</a>
+  <a href="reserved.html">RESERVED</a>
+  <a href="repossessed.html">REPOSSESSED</a>
+  <a href="sold.html">SOLD</a>
+  <a href="add_vehicle.html">ADD NEW VEHICLE</a>
+  <!-- <a href="numberplates.html">NUMBER PLATES</a>
+  <a href="logbooks.html">LOGBOOKS</a> -->
+  <a href="essentials.html">ESSENTIALS</a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header>
+      <div class="header-left">
+        <h1>Number Plates Records</h1>
+      </div>
+      
+      <div class="search-container">
+        <input type="text" 
+               id="searchBar" 
+               placeholder="Search by registration number..." 
+               title="Search by registration number">
+        <button id="clearSearch" style="display: none;">×</button>
+      </div>
+    </header>
+
+    <div id="list"></div>
+  </div>
+
+  <!-- Custom Alert Modal -->
+  <div id="customAlert" class="popup">
+    <div class="popup-content">
+      <h3 id="alertTitle"></h3>
+      <p id="alertMessage"></p>
+      <div class="popup-actions">
+        <button id="alertOkBtn" style="
+          background-color: #28a745;
+          color: white;
+          padding: 8px 16px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        ">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, ref, onValue, update, set, remove, get } from '../firebase.js';
+
+    const list = document.getElementById('list');
+    const searchBar = document.getElementById('searchBar');
+    const clearSearch = document.getElementById('clearSearch');
+    const today = new Date().toISOString().split("T")[0];
+    
+    let allNumberPlates = [];
+    let searchQuery = '';
+
+    // Custom Alert Function
+    function showAlert(message, title = "Alert") {
+      return new Promise(resolve => {
+        const alertModal = document.getElementById("customAlert");
+        const alertTitle = document.getElementById("alertTitle");
+        const alertMessage = document.getElementById("alertMessage");
+        const alertOkBtn = document.getElementById("alertOkBtn");
+        
+        alertTitle.textContent = title;
+        alertMessage.textContent = message;
+        alertModal.style.display = "flex";
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newOkBtn = alertOkBtn.cloneNode(true);
+        alertOkBtn.parentNode.replaceChild(newOkBtn, alertOkBtn);
+        
+        // Add click handler for OK button
+        document.getElementById("alertOkBtn").onclick = () => {
+          alertModal.style.display = "none";
+          resolve(true);
+        };
+        
+        // Close when clicking outside
+        alertModal.onclick = function(e) {
+          if (e.target === this) {
+            this.style.display = 'none';
+            resolve(false);
+          }
+        };
+      });
+    }
+
+    // Format date function
+    function formatDateDisplay(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(2);
+      return `${day}/${month}/${year}`;
+    }
+
+    // Highlight search text
+    function highlightText(text, query) {
+      if (!query || !text) return text;
+      
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedQuery})`, 'gi');
+      
+      return text.toString().replace(regex, '<span class="highlight-search">$1</span>');
+      
+    }
+
+    // Check if registration number is locked
+    async function isRegistrationLocked(vehicleId) {
+      try {
+        const snap = await get(ref(db, `vehicles/${vehicleId}/lockedFields/regno`));
+        return snap.val() === true;
+      } catch (error) {
+        console.error('Error checking registration lock:', error);
+        return false;
+      }
+    }
+
+    // Function to get vehicles with registration numbers
+    async function getVehiclesWithRegNumbers() {
+      try {
+        console.log('Fetching vehicles from Firebase...');
+        
+        // Get all vehicles
+        const vehiclesSnap = await get(ref(db, 'vehicles'));
+        
+        if (!vehiclesSnap.exists()) {
+          console.log('No vehicles found in database');
+          return [];
+        }
+        
+        const vehicles = vehiclesSnap.val();
+        console.log('Total vehicles in database:', Object.keys(vehicles).length);
+        
+        // Filter vehicles that have registration numbers
+        const vehiclesWithReg = [];
+        
+        for (const [id, vehicle] of Object.entries(vehicles)) {
+          if (!vehicle) continue;
+          
+          const regno = (vehicle.regno || '').toString().trim();
+          
+          // Check if vehicle has a registration number
+          if (regno !== '' && regno !== 'N/A' && regno.length > 0) {
+            // Check if registration is locked
+            const isRegLocked = await isRegistrationLocked(id);
+            
+            vehiclesWithReg.push({
+              id,
+              ...vehicle,
+              regno: regno.toUpperCase(),
+              isRegLocked
+            });
+            
+            console.log(`Found vehicle with regno: ${regno.toUpperCase()} (ID: ${id})`);
+          }
+        }
+        
+        console.log(`Vehicles with registration numbers: ${vehiclesWithReg.length}`);
+        return vehiclesWithReg;
+        
+      } catch (error) {
+        console.error('Error fetching vehicles:', error);
+        console.error('Error details:', error.message, error.stack);
+        
+        // Check for specific Firebase errors
+        if (error.code === 'PERMISSION_DENIED') {
+          console.error('Firebase permission denied. Check your security rules.');
+          await showAlert('Permission denied. Please check database access.', 'Database Error');
+        } else if (error.code === 'NETWORK_ERROR') {
+          console.error('Network error. Check internet connection.');
+          await showAlert('Network error. Please check your internet connection.', 'Connection Error');
+        } else {
+          await showAlert(`Error fetching vehicles: ${error.message}`, 'Error');
+        }
+        
+        return [];
+      }
+    }
+
+    // Lock registration number permanently
+    async function lockRegistrationNumber(vehicleId, registrationNumber) {
+      try {
+        const updates = {};
+        
+        // Lock the registration number
+        updates[`vehicles/${vehicleId}/lockedFields/regno`] = true;
+        
+        // Ensure registration number is saved
+        if (registrationNumber && registrationNumber.trim() !== '') {
+          updates[`vehicles/${vehicleId}/regno`] = registrationNumber.trim().toUpperCase();
+        }
+        
+        await update(ref(db), updates);
+        return true;
+      } catch (error) {
+        console.error('Error locking registration number:', error);
+        return false;
+      }
+    }
+
+    // Function to get or create number plate record
+    async function getNumberPlateRecord(vehicleId, vehicleData) {
+      try {
+        const plateSnap = await get(ref(db, `numberplates/${vehicleId}`));
+        
+        if (plateSnap.exists()) {
+          // Return existing record
+          const record = plateSnap.val();
+          return {
+            ...record,
+            isRegLocked: vehicleData.isRegLocked || false
+          };
+        } else {
+          // Create new record with default values
+          const newRecord = {
+            regno: vehicleData.regno || '',
+            consignee: vehicleData.consignee || 'N/A',
+            brand: vehicleData.brand || 'N/A',
+            model: vehicleData.model || 'N/A',
+            chassis: vehicleData.chassis || 'N/A',
+            engine: vehicleData.engine || 'N/A',
+            fuel: vehicleData.fuel || 'N/A',
+            cc: vehicleData.cc || vehicleData.ccValue || 'N/A',
+            color: vehicleData.color || 'N/A',
+            receivingDate: vehicleData.receivingDate || today,
+            status: '',
+            receivingDate: today, // ADDED: Default receiving date
+            deliveredOn: '',
+            deliveredTo: '',
+            deliveredBy: '',
+            
+            contact: '',
+            remarks: '',
+            completed: false,
+            completedAt: null,
+            isRegLocked: vehicleData.isRegLocked || false
+          };
+          
+          // Save to database
+          await set(ref(db, `numberplates/${vehicleId}`), newRecord);
+          console.log(`Created new number plate record for vehicle ${vehicleId}`);
+          return newRecord;
+        }
+      } catch (error) {
+        console.error('Error getting number plate record:', error);
+        return null;
+      }
+    }
+
+    // Function to disable all form fields
+    function disableFormFields(vehicleId) {
+      const fields = [
+        `receivingDate-${vehicleId}`, // ADDED: Receiving date field
+        `status-${vehicleId}`,
+        `deliveredOn-${vehicleId}`,
+        `deliveredTo-${vehicleId}`,
+        `deliveredBy-${vehicleId}`,
+        
+        `contact-${vehicleId}`,
+        `remarks-${vehicleId}`
+      ];
+      
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.disabled = true;
+        }
+      });
+      
+      // Also disable the save button
+      const saveBtn = document.querySelector(`button.saveBtn[data-id="${vehicleId}"]`);
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Completed';
+      }
+    }
+
+    // Function to check if all required fields are filled
+    function validateRequiredFields(vehicleId) {
+      const requiredFields = [
+        { id: `receivingDate-${vehicleId}`, name: 'Receiving Date' }, // ADDED: Receiving date
+        { id: `status-${vehicleId}`, name: 'Status' },
+        { id: `deliveredOn-${vehicleId}`, name: 'Delivered Date' },
+        { id: `deliveredTo-${vehicleId}`, name: 'Delivered To' },
+        { id: `deliveredBy-${vehicleId}`, name: 'Delivered By' },
+        
+        { id: `contact-${vehicleId}`, name: 'Contact No' }
+        // Remarks is optional
+      ];
+      
+      for (const field of requiredFields) {
+        const element = document.getElementById(field.id);
+        if (!element || !element.value.trim()) {
+          return {
+            isValid: false,
+            fieldName: field.name,
+            element: element
+          };
+        }
+      }
+      
+      return { isValid: true };
+    }
+
+    // Validate dates
+    function validateDates(receivingDate, deliveredOn) {
+      // Validate receiving date
+      if (!receivingDate) {
+        return { isValid: false, message: 'Receiving date is required' };
+      }
+      
+      const receiving = new Date(receivingDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      receiving.setHours(0, 0, 0, 0);
+      
+      // Receiving date cannot be in the future
+      if (receiving > today) {
+        return { 
+          isValid: false, 
+          message: 'Receiving date cannot be in the future' 
+        };
+      }
+      
+      // Validate delivery date
+      if (!deliveredOn) {
+        return { isValid: false, message: 'Delivery date is required' };
+      }
+      
+      const delivery = new Date(deliveredOn);
+      delivery.setHours(0, 0, 0, 0);
+      
+      // Delivery date cannot be in the future
+      if (delivery > today) {
+        return { 
+          isValid: false, 
+          message: 'Delivery date cannot be in the future' 
+        };
+      }
+      
+      // Delivery date cannot be before receiving date
+      if (delivery < receiving) {
+        return { 
+          isValid: false, 
+          message: 'Delivery date cannot be before receiving date' 
+        };
+      }
+      
+      return { isValid: true };
+    }
+
+    // Filter and render number plates based on search
+    async function renderNumberPlates() {
+      try {
+        console.log('Rendering number plates...');
+        list.innerHTML = '<p>Loading vehicles...</p>';
+        
+        // Get vehicles with registration numbers
+        const vehiclesWithReg = await getVehiclesWithRegNumbers();
+        
+        if (vehiclesWithReg.length === 0) {
+          list.innerHTML = '<div class="no-plates">No vehicles with registration numbers found. Add registration numbers in the Stock page first.</div>';
+          console.log('No vehicles with registration numbers found');
+          return;
+        }
+        
+        // Filter by search query
+        let filteredVehicles = vehiclesWithReg;
+        if (searchQuery) {
+          filteredVehicles = vehiclesWithReg.filter(vehicle => 
+            vehicle.regno.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+        }
+        
+        if (filteredVehicles.length === 0) {
+          list.innerHTML = `<div class="no-plates">No vehicles found matching "${searchQuery}"</div>`;
+          return;
+        }
+        
+        console.log(`Rendering ${filteredVehicles.length} vehicles`);
+        list.innerHTML = '';
+        
+        // Sort vehicles by registration number
+        filteredVehicles.sort((a, b) => a.regno.localeCompare(b.regno));
+        
+        // Render each vehicle
+        for (const vehicle of filteredVehicles) {
+          // Get or create number plate record
+          const plateRecord = await getNumberPlateRecord(vehicle.id, vehicle);
+          
+          if (!plateRecord) {
+            console.error(`Failed to get number plate record for vehicle ${vehicle.id}`);
+            continue;
+          }
+          
+          const div = document.createElement('div');
+          div.classList.add('vehicle-box');
+          
+          // Check if record is already completed
+          const isCompleted = plateRecord.completed === true;
+          
+          // Highlight registration number if search query matches
+          const highlightedRegno = searchQuery 
+            ? highlightText(plateRecord.regno, searchQuery)
+            : plateRecord.regno;
+          
+          // Show lock indicator if registration is locked
+          const lockIndicator = plateRecord.isRegLocked 
+            ? '<span class="reg-lock-indicator" title="Registration number is permanent"><span class="reg-lock-icon">🔒</span> Permanent</span>' 
+            : '';
+          
+          div.innerHTML = `
+    <!-- Consignee Header -->
+    <div class="consignee-header">
+      ${(plateRecord.consignee || vehicle.consignee || 'N/A').toUpperCase()}
+      ${isCompleted ? '<span class="completed-badge">COMPLETED</span>' : ''}
+    </div>
+    
+    <!-- Plate Header -->
+    <div class="plate-header">
+      <div class="plate-number ${searchQuery ? 'highlighted' : ''}">
+        ${highlightedRegno}
+        ${lockIndicator}
+      </div>
+      <div class="received-date">
+        Registration: ${formatDateDisplay(plateRecord.receivingDate)}
+      </div>
+    </div>
+    
+    <!-- Vehicle Details -->
+    <div class="vehicle-details-grid">
+      <div><b>Brand:</b> ${(plateRecord.brand || 'N/A').toUpperCase()}</div>
+      <div><b>Model:</b> ${(plateRecord.model || 'N/A').toUpperCase()}</div>
+      <div><b>Chassis:</b> ${(plateRecord.chassis || 'N/A').toUpperCase()}</div>
+      <div><b>Engine:</b> ${(plateRecord.engine || 'N/A').toUpperCase()}</div>
+      <div><b>Fuel:</b> ${(plateRecord.fuel || 'N/A').toUpperCase()}</div>
+      <div><b>CC:</b> ${(plateRecord.cc || 'N/A').toUpperCase()}</div>
+      <div><b>Color:</b> ${(plateRecord.color || 'N/A').toUpperCase()}</div>
+    </div>
+    
+    <!-- Number Plate Status Form -->
+    <div class="form-section">
+      <h3>Number Plate Status</h3>
+      
+      <!-- ROW 1: 3 fields -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Receiving Date:</label>
+          <input type="date" id="receivingDate-${vehicle.id}" 
+                 max="${today}" 
+                 value="${plateRecord.receivingDate || today}"
+                 ${isCompleted ? 'disabled' : ''}>
+        </div>
+        
+        <div class="form-group">
+          <label>Status:</label>
+          <select id="status-${vehicle.id}" class="status-select" ${isCompleted ? 'disabled' : ''}>
+            <option value="">Select Status</option>
+            <option value="Available" ${plateRecord.status === 'Available' ? 'selected' : ''}>Available</option>
+            <option value="Awaiting" ${plateRecord.status === 'Awaiting' ? 'selected' : ''}>Awaiting</option>
+            <option value="Delivered" ${plateRecord.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="Pending" ${plateRecord.status === 'Pending' ? 'selected' : ''}>Pending</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Delivered By:</label>
+          <select id="deliveredBy-${vehicle.id}" class="delivered-by-select" ${isCompleted ? 'disabled' : ''}>
+            <option value="">Select</option>
+            <option value="Self" ${plateRecord.deliveredBy === 'Self' ? 'selected' : ''}>Self</option>
+            <option value="Courier" ${plateRecord.deliveredBy === 'Courier' ? 'selected' : ''}>Courier</option>
+            <option value="Agency" ${plateRecord.deliveredBy === 'Agency' ? 'selected' : ''}>Agency</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- ROW 2: 3 fields -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Delivered On:</label>
+          <input type="date" id="deliveredOn-${vehicle.id}" 
+                 max="${today}" 
+                 value="${plateRecord.deliveredOn || ''}"
+                 ${isCompleted ? 'disabled' : ''}>
+        </div>
+        
+        <div class="form-group">
+          <label>Delivered To:</label>
+          <input type="text" id="deliveredTo-${vehicle.id}" 
+                 value="${plateRecord.deliveredTo || ''}" 
+                 placeholder="Name of recipient"
+                 ${isCompleted ? 'disabled' : ''}>
+        </div>
+        
+        <div class="form-group">
+          <label>Contact No:</label>
+          <input type="text" id="contact-${vehicle.id}" 
+                 value="${plateRecord.contact || ''}" 
+                 placeholder="Contact number"
+                 ${isCompleted ? 'disabled' : ''}>
+        </div>
+      </div>
+      
+      <!-- ROW 3: 1 field (full width) -->
+      <div class="form-row">
+        <div class="form-group" style="flex: 2;">
+          <label>Remarks:</label>
+          <input type="text" id="remarks-${vehicle.id}" 
+                 value="${plateRecord.remarks || ''}" 
+                 placeholder="Any additional remarks (optional)"
+                 ${isCompleted ? 'disabled' : ''}>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button data-id="${vehicle.id}" class="saveBtn" ${isCompleted ? 'disabled' : ''}>
+          ${isCompleted ? 'Completed' : 'Save Changes'}
+        </button>
+      </div>
+    </div>
+  `;
+          
+          list.appendChild(div);
+        }
+        
+      } catch (error) {
+        console.error('Error rendering number plates:', error);
+        console.error('Error details:', error.message, error.stack);
+        list.innerHTML = '<div class="no-plates">Error loading data. Please check console for details.</div>';
+      }
+    }
+
+        // Initialize with error handling
+    async function initialize() {
+      try {
+        console.log('Initializing Number Plates page...');
+        await renderNumberPlates();
+        
+        // REMOVED real-time listener to prevent double rendering
+        // If you need updates, use a refresh button instead
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        list.innerHTML = '<div class="no-plates">Failed to initialize. Please refresh the page.</div>';
+      }
+    }
+
+    // Start initialization
+    initialize();
+
+    // Search functionality
+    searchBar.addEventListener('input', () => {
+      searchQuery = searchBar.value.trim();
+      clearSearch.style.display = searchQuery ? 'block' : 'none';
+      renderNumberPlates();
+    });
+
+    // Clear search
+    clearSearch.addEventListener('click', () => {
+      searchBar.value = '';
+      searchQuery = '';
+      clearSearch.style.display = 'none';
+      renderNumberPlates();
+    });
+
+    // SAVE BUTTON HANDLER
+    list.addEventListener('click', async (e) => {
+      const id = e.target.dataset.id;
+      if (!id) return;
+
+      // Save record
+      if (e.target.classList.contains('saveBtn')) {
+        try {
+          // Validate all required fields
+          const validation = validateRequiredFields(id);
+          if (!validation.isValid) {
+            await showAlert(`Please fill the "${validation.fieldName}" field.`, 'Validation Error');
+            if (validation.element) {
+              validation.element.focus();
+            }
+            return;
+          }
+          
+          // Get form values
+          const receivingDate = document.getElementById(`receivingDate-${id}`).value;
+          const status = document.getElementById(`status-${id}`).value;
+          const deliveredOn = document.getElementById(`deliveredOn-${id}`).value;
+          
+          // Validate dates
+          const dateValidation = validateDates(receivingDate, deliveredOn);
+          if (!dateValidation.isValid) {
+            await showAlert(dateValidation.message, 'Validation Error');
+            return;
+          }
+          
+          // Gather updated values
+          const updates = {
+            receivingDate: receivingDate, // SAVE receiving date
+            status: status,
+            deliveredOn: deliveredOn,
+            deliveredTo: document.getElementById(`deliveredTo-${id}`).value,
+            deliveredBy: document.getElementById(`deliveredBy-${id}`).value,
+            address: document.getElementById(`address-${id}`).value,
+            contact: document.getElementById(`contact-${id}`).value,
+            remarks: document.getElementById(`remarks-${id}`).value || '',
+            completed: true,
+            completedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          
+          // Check if status is "Delivered" and registration should be locked
+          if (status === 'Delivered') {
+            // Get current registration number
+            const vehicleSnap = await get(ref(db, `vehicles/${id}`));
+            if (vehicleSnap.exists()) {
+              const vehicle = vehicleSnap.val();
+              const regno = (vehicle.regno || '').toString().trim();
+              
+              if (regno && regno !== '' && regno !== 'N/A') {
+                // Lock the registration number permanently
+                const lockSuccess = await lockRegistrationNumber(id, regno);
+                if (lockSuccess) {
+                  console.log(`Registration number ${regno} locked for vehicle ${id}`);
+                }
+              }
+            }
+          }
+          
+          // Update number plate record in database
+          await update(ref(db, `numberplates/${id}`), updates);
+          
+          // Also update the vehicle's receiving date if different
+          if (receivingDate && receivingDate !== plateRecord.receivingDate) {
+            await update(ref(db, `vehicles/${id}`), {
+              receivingDate: receivingDate
+            });
+          }
+          
+          // Disable all form fields to prevent further changes
+          disableFormFields(id);
+          
+          // Show success message
+          await showAlert('Number plate record saved successfully!', 'Success');
+          
+        } catch (error) {
+          console.error('Error saving record:', error);
+          await showAlert('Error saving changes. Please try again.', 'Error');
+        }
+      }
+    });
+
+    // Auto-update delivered date when status changes to "Delivered"
+    list.addEventListener('change', (e) => {
+      if (e.target.classList.contains('status-select') && !e.target.disabled) {
+        const id = e.target.id.replace('status-', '');
+        const status = e.target.value;
+        const deliveredOnInput = document.getElementById(`deliveredOn-${id}`);
+        
+        // If status is "Delivered" and delivered date is empty, set to today
+        if (status === 'Delivered' && !deliveredOnInput.value) {
+          deliveredOnInput.value = today;
+        }
+      }
+    });
+
+    // Prevent future dates in date fields
+    list.addEventListener('input', (e) => {
+      if (e.target.type === 'date' && !e.target.disabled) {
+        const fieldId = e.target.id;
+        
+        // Check if it's receiving date or delivered date
+        if (fieldId.startsWith('receivingDate-') || fieldId.startsWith('deliveredOn-')) {
+          if (e.target.value > today) {
+            e.target.value = today;
+            showAlert('Date cannot be in the future', 'Validation');
+          }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
