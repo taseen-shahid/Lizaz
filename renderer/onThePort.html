@@ -5,7 +5,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <meta charset="utf-8">
-  <title>On The Way Vehicles</title>
+  <title>On The Port Vehicles</title>
   <link rel="stylesheet" href="./assets/styles.css">
   
   <style>
@@ -16,11 +16,12 @@
     
     .highlight-search {
       background: yellow;
+      
       font-weight: bold;
       padding: 2px;
     }
 
-    #onTheWayList {
+    #onThePortList {
       display: flex;
       flex-direction: column;
       gap: 15px;
@@ -34,8 +35,8 @@
       border-radius: 8px;
       align-items: flex-start;
       gap: 15px;
-      background-color: #fff9e6;
-      border-left: 5px solid #ffc107;
+      background-color: #e8f4f8;
+      border-left: 5px solid #17a2b8;
     }
     
     .vehicle-details {
@@ -134,15 +135,15 @@
     #shipNameButtons button {
       padding: 5px 10px;
       border: none;
-      background-color: #ffc107;
-      color: #856404;
+      background-color: #17a2b8;
+      color: white;
       border-radius: 4px;
       cursor: pointer;
       font-weight: bold;
     }
     
     #shipNameButtons button:hover {
-      background-color: #ffb300;
+      background-color: #138496;
     }
     
     #shipNameButtons button.filter-active {
@@ -171,9 +172,9 @@
       margin-left: 5px !important;
     }
     
-    .statusSelect[data-status="pending"] {
-      background-color: #fff3cd !important;
-      border-color: #ffc107 !important;
+    .statusSelect[data-status="ontheport"] {
+      background-color: #d1ecf1 !important;
+      border-color: #17a2b8 !important;
     }
     
     select.statusSelect option[value="available"] {
@@ -211,8 +212,8 @@
     }
     
     .alert-title {
-      background: #ffc107;
-      color: #856404;
+      background: #17a2b8;
+      color: white;
       padding: 15px;
       text-align: center;
       font-weight: bold;
@@ -227,8 +228,8 @@
     }
     
     .alert-button {
-      background: #ffc107;
-      color: #856404;
+      background: #17a2b8;
+      color: white;
       border: none;
       padding: 12px;
       width: 100%;
@@ -239,13 +240,13 @@
     }
     
     .alert-button:hover {
-      background: #ffb300;
+      background: #138496;
     }
     
-    .pending-badge {
+    .port-badge {
       display: inline-block;
-      background-color: #ffc107;
-      color: #856404;
+      background-color: #17a2b8;
+      color: white;
       padding: 2px 8px;
       border-radius: 4px;
       font-size: 11px;
@@ -253,16 +254,16 @@
       margin-left: 10px;
     }
     
-    .shipment-info {
-      background: #fff3cd;
+    .port-info {
+      background: #d1ecf1;
       padding: 12px;
       border-radius: 6px;
       margin-bottom: 15px;
-      border-left: 4px solid #ffc107;
+      border-left: 4px solid #17a2b8;
     }
     
-    .shipment-info h4 {
-      color: #856404;
+    .port-info h4 {
+      color: #0c5460;
       margin-bottom: 10px;
     }
     
@@ -271,7 +272,7 @@
       min-width: 180px !important;
       max-width: 250px !important;
       padding: 4px 8px !important;
-      border: 1px solid #ffc107 !important;
+      border: 1px solid #17a2b8 !important;
       border-radius: 4px !important;
       font-size: 13px !important;
       background-color: white !important;
@@ -281,8 +282,8 @@
     }
 
     .ship-name-select:hover {
-      border-color: #ffc107 !important;
-      background-color: #fff9e6 !important;
+      border-color: #17a2b8 !important;
+      background-color: #e8f4f8 !important;
     }
     
     .shipment-date-input {
@@ -290,9 +291,9 @@
       min-width: 180px !important;
       max-width: 250px !important;
       padding: 4px 8px !important;
-      border: 1px solid #ffc107 !important;
+      border: 1px solid #17a2b8 !important;
       border-radius: 4px !important;
-      background-color: #fff9e6 !important;
+      background-color: #e8f4f8 !important;
       font-size: 13px !important;
       cursor: pointer !important;
       box-sizing: border-box !important;
@@ -332,7 +333,7 @@
     .popup-form-content h2 {
       color: #2c3e50;
       margin-bottom: 20px;
-      border-bottom: 2px solid #ffc107;
+      border-bottom: 2px solid #17a2b8;
       padding-bottom: 10px;
     }
     
@@ -367,7 +368,7 @@
     .form-group input:focus,
     .form-group select:focus {
       outline: none;
-      border-color: #ffc107;
+      border-color: #17a2b8;
     }
     
     .form-group input:disabled,
@@ -415,15 +416,6 @@
     
     .cancel-btn:hover {
       background-color: #5a6268;
-    }
-    
-    .move-expired-btn {
-      background-color: #dc3545 !important;
-      color: white !important;
-    }
-    
-    .move-expired-btn:hover {
-      background-color: #c82333 !important;
     }
     
     @media (max-width: 768px) {
@@ -549,8 +541,8 @@
   <div class="sidebar">
     <h2>LIZAZ ENTERPRISE LTD</h2>
     <a href="dashboard.html">DASHBOARD</a>
-    <a href="onTheWay.html" class="active">On The Way</a>
-    <a href="onThePort.html">On The Port</a>
+    <a href="onTheWay.html">On The Way</a>
+    <a href="onThePort.html" class="active">On The Port</a>
     <a href="stock.html">STOCK</a>
     <a href="reserved.html">RESERVED</a>
     <a href="repossessed.html">REPOSSESSED</a>
@@ -563,7 +555,7 @@
   <div class="main-content">
     <header>
       <div>
-        <h1 style="display:inline;">ON THE WAY VEHICLES</h1>
+        <h1 style="display:inline;">ON THE PORT VEHICLES</h1>
         <span id="stockCount">(0)</span>
       </div>
       <div class="search-container">
@@ -572,8 +564,7 @@
           <span id="clearSearch" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;font-weight:bold;display:none;">✕</span>
         </div>
       </div>
-      <button id="downloadBtn" style="padding:6px 12px;background:#025f19;color:#f7faf9;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">DOWNLOAD REPORT</button>
-      <button id="moveExpiredBtn" class="move-expired-btn" style="padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">🚢 MOVE EXPIRED TO PORT</button>
+      <button id="downloadBtn" style="padding:6px 12px;background:#0c5460;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">DOWNLOAD REPORT</button>
     </header>
 
     <div id="supplierButtons" style="margin: 15px 0 5px 0;"></div>
@@ -586,7 +577,7 @@
       </span>
     </div>
 
-    <div id="onTheWayList">
+    <div id="onThePortList">
       <p>Loading vehicles...</p>
     </div>
     
@@ -595,7 +586,7 @@
     <script type="module">
       import { db, ref, onValue, set, remove, get, update } from '../firebase.js';
 
-      const onTheWayList = document.getElementById('onTheWayList');
+      const onThePortList = document.getElementById('onThePortList');
       const supplierButtonsDiv = document.getElementById('supplierButtons');
       const shipNameButtonsDiv = document.getElementById('shipNameButtons');
       const stockCount = document.getElementById('stockCount');
@@ -737,22 +728,15 @@
       }
 
       function getStatusOptions(currentStatus) {
-        if (currentStatus === 'pending') {
+        if (currentStatus === 'ontheport') {
           return [
-            { value: 'pending', text: 'ON THE WAY', selected: true },
+            { value: 'ontheport', text: 'ON THE PORT', selected: true },
             { value: 'available', text: 'AVAILABLE' }
           ];
         }
         return [
           { value: 'available', text: 'AVAILABLE', selected: true }
         ];
-      }
-
-      function getStatusClass(status) {
-        if (status === 'pending') return 'status-pending';
-        if (status === 'available') return 'status-available';
-        if (status === 'reserved') return 'status-reserved';
-        return 'status-pending';
       }
 
       function loadShipNames() {
@@ -765,7 +749,7 @@
 
       function renderSupplierButtons() {
         supplierButtonsDiv.innerHTML = "";
-        const pendingVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'pending');
+        const portVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'ontheport');
         
         const allSuppliersBtn = document.createElement("button");
         allSuppliersBtn.textContent = "ALL SUPPLIERS";
@@ -779,7 +763,7 @@
         supplierButtonsDiv.appendChild(allSuppliersBtn);
 
         const suppliersSet = new Set();
-        pendingVehicles.forEach(v => {
+        portVehicles.forEach(v => {
           const supplier = (v.supplier || '').toString().trim().toUpperCase();
           if (supplier) suppliersSet.add(supplier);
         });
@@ -802,10 +786,10 @@
       function renderShipNameButtons() {
         shipNameButtonsDiv.innerHTML = "";
         
-        let pendingVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'pending');
+        let portVehicles = Object.values(vehiclesData || {}).filter(v => v.status === 'ontheport');
         
         if (currentSupplierFilter) {
-          pendingVehicles = pendingVehicles.filter(v => (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
+          portVehicles = portVehicles.filter(v => (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
         }
         
         const allShipsBtn = document.createElement("button");
@@ -818,7 +802,7 @@
         if (!currentShipFilter) allShipsBtn.classList.add("filter-active");
         shipNameButtonsDiv.appendChild(allShipsBtn);
 
-        const shipNames = [...new Set(pendingVehicles
+        const shipNames = [...new Set(portVehicles
           .map(v => (v?.shipName || '').toString().trim().toUpperCase())
           .filter(Boolean))]
           .sort((a,b) => a.localeCompare(b));
@@ -869,15 +853,6 @@
             shipmentDate: newDate,
             updatedAt: Date.now()
           });
-          
-          const onTheWaySnap = await get(ref(db, 'onTheWay'));
-          const onTheWayData = onTheWaySnap.val() || {};
-          for (const key in onTheWayData) {
-            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) {
-              await update(ref(db, `onTheWay/${key}`), { shipmentDate: newDate, updatedAt: Date.now() });
-              break;
-            }
-          }
           await showAlert(`Shipment date updated successfully!`, 'Success');
           renderList();
         } catch (error) {
@@ -1029,15 +1004,8 @@
       async function moveToStockWithDetails(vehicleId, vehicleData, formData) {
         try {
           const originalId = vehicleData.id || vehicleId;
-          const updatedVehicle = { ...vehicleData, id: originalId, status: 'available', updatedAt: Date.now(), receivingDate: formData.receivingDate, consignee: formData.consignee, supplier: formData.supplier, chassis: formData.chassis, engine: formData.engine, brand: formData.brand, model: formData.model, cc: formData.cc, color: formData.color, package: formData.package, fuel: formData.fuel, shift: formData.shift, drive: formData.drive, mileage: formData.mileage, location: formData.location, regno: formData.regno || null, logbook: formData.logbook || null, remarks: formData.remarks || null, statusHistory: [...(vehicleData.statusHistory || []), { status: 'available', date: new Date().toISOString().split('T')[0], timestamp: Date.now(), fromModule: 'onTheWay' }] };
+          const updatedVehicle = { ...vehicleData, id: originalId, status: 'available', updatedAt: Date.now(), receivingDate: formData.receivingDate, consignee: formData.consignee, supplier: formData.supplier, chassis: formData.chassis, engine: formData.engine, brand: formData.brand, model: formData.model, cc: formData.cc, color: formData.color, package: formData.package, fuel: formData.fuel, shift: formData.shift, drive: formData.drive, mileage: formData.mileage, location: formData.location, regno: formData.regno || null, logbook: formData.logbook || null, remarks: formData.remarks || null, statusHistory: [...(vehicleData.statusHistory || []), { status: 'available', date: new Date().toISOString().split('T')[0], timestamp: Date.now(), fromModule: 'onThePort' }] };
           await update(ref(db, `vehicles/${vehicleId}`), updatedVehicle);
-          const onTheWaySnap = await get(ref(db, 'onTheWay'));
-          const onTheWayData = onTheWaySnap.val() || {};
-          let onTheWayKey = null;
-          for (const key in onTheWayData) {
-            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) { onTheWayKey = key; break; }
-          }
-          if (onTheWayKey) await remove(ref(db, `onTheWay/${onTheWayKey}`));
           vehicleFormPopup.style.display = 'none';
           completeVehicleForm.reset();
           pendingVehicleToMove = null;
@@ -1051,106 +1019,20 @@
       function fetchVehicles() {
         onValue(ref(db, 'vehicles'), snap => {
           const allVehicles = snap.val() || {};
-          const pendingVehicles = {};
-          Object.keys(allVehicles).forEach(key => { if (allVehicles[key].status === 'pending') pendingVehicles[key] = allVehicles[key]; });
-          vehiclesData = pendingVehicles;
+          const portVehicles = {};
+          Object.keys(allVehicles).forEach(key => { 
+            if (allVehicles[key].status === 'ontheport') portVehicles[key] = allVehicles[key];
+          });
+          vehiclesData = portVehicles;
           renderSupplierButtons();
           renderShipNameButtons();
           renderList();
         });
       }
 
-      // Function to check and move expired shipment dates to On The Port
-      async function checkAndMoveToPort() {
-        try {
-          console.log("Checking for expired shipment dates...");
-          
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const vehiclesSnap = await get(ref(db, 'vehicles'));
-          const allVehicles = vehiclesSnap.val() || {};
-          
-          let movedCount = 0;
-          const vehiclesToMove = [];
-          
-          for (const [vehicleId, vehicle] of Object.entries(allVehicles)) {
-            if ((vehicle.status === 'pending') && vehicle.shipmentDate) {
-              const shipmentDate = new Date(vehicle.shipmentDate);
-              shipmentDate.setHours(0, 0, 0, 0);
-              
-              if (shipmentDate < today) {
-                vehiclesToMove.push({ vehicleId, vehicle });
-              }
-            }
-          }
-          
-          for (const { vehicleId, vehicle } of vehiclesToMove) {
-            try {
-              await update(ref(db, `vehicles/${vehicleId}`), {
-                status: 'ontheport',
-                arrivalDate: new Date().toISOString().split('T')[0],
-                previousShipmentDate: vehicle.shipmentDate,
-                movedToPortAt: Date.now(),
-                statusHistory: [...(vehicle.statusHistory || []), {
-                  fromStatus: vehicle.status,
-                  toStatus: 'ontheport',
-                  date: new Date().toISOString().split('T')[0],
-                  timestamp: Date.now(),
-                  reason: 'Shipment date passed',
-                  fromModule: 'onTheWay'
-                }]
-              });
-              
-              const onTheWaySnap = await get(ref(db, 'onTheWay'));
-              const onTheWayData = onTheWaySnap.val() || {};
-              for (const key in onTheWayData) {
-                if (onTheWayData[key].vehicleId == vehicleId) {
-                  await remove(ref(db, `onTheWay/${key}`));
-                  break;
-                }
-              }
-              
-              movedCount++;
-              console.log(`✅ Moved vehicle ${vehicleId} to On The Port`);
-            } catch (err) {
-              console.error(`Error moving vehicle ${vehicleId}:`, err);
-            }
-          }
-          
-          if (movedCount > 0) {
-            console.log(`Total moved: ${movedCount} vehicle(s)`);
-            const vehiclesSnapFresh = await get(ref(db, 'vehicles'));
-            const allVehiclesFresh = vehiclesSnapFresh.val() || {};
-            const pendingVehicles = {};
-            Object.keys(allVehiclesFresh).forEach(key => { 
-              if (allVehiclesFresh[key].status === 'pending') pendingVehicles[key] = allVehiclesFresh[key];
-            });
-            vehiclesData = pendingVehicles;
-            renderList();
-            renderSupplierButtons();
-            renderShipNameButtons();
-            
-            await showAlert(`${movedCount} vehicle(s) have been moved to "On The Port" because their shipment date has passed.`, 'Auto-Move Complete');
-          } else {
-            console.log("No expired shipment dates found");
-          }
-        } catch (error) {
-          console.error("Error in checkAndMoveToPort:", error);
-        }
-      }
-
       async function updateShipName(vehicleId, oldShipName, newShipName) {
         try {
           await update(ref(db, `vehicles/${vehicleId}`), { shipName: newShipName.toUpperCase(), updatedAt: Date.now() });
-          const onTheWaySnap = await get(ref(db, 'onTheWay'));
-          const onTheWayData = onTheWaySnap.val() || {};
-          for (const key in onTheWayData) {
-            if (onTheWayData[key].vehicleId === parseInt(vehicleId) || onTheWayData[key].vehicleId === vehicleId) {
-              await update(ref(db, `onTheWay/${key}`), { shipName: newShipName.toUpperCase(), updatedAt: Date.now() });
-              break;
-            }
-          }
           await showAlert(`Ship name updated from "${oldShipName}" to "${newShipName}" successfully!`, 'Success');
           renderList();
           renderSupplierButtons();
@@ -1159,7 +1041,7 @@
       }
 
       function renderList() {
-        onTheWayList.innerHTML = '';
+        onThePortList.innerHTML = '';
         let filteredVehicles = Object.values(vehiclesData || {});
         if (currentSupplierFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.supplier || '').toString().trim().toUpperCase() === currentSupplierFilter);
         if (currentShipFilter) filteredVehicles = filteredVehicles.filter(v => v && (v.shipName || '').toString().trim().toUpperCase() === currentShipFilter);
@@ -1174,12 +1056,11 @@
         filteredVehicles.sort((a, b) => { const modelA = (a.model || '').toUpperCase(); const modelB = (b.model || '').toUpperCase(); return modelA < modelB ? -1 : modelA > modelB ? 1 : 0; });
         stockCount.textContent = `(${filteredVehicles.length})`;
         updateActiveFiltersDisplay();
-        if (filteredVehicles.length === 0) { onTheWayList.innerHTML = '<p>No pending vehicles found.</p>'; return; }
+        if (filteredVehicles.length === 0) { onThePortList.innerHTML = '<p>No vehicles on port found.</p>'; return; }
 
         filteredVehicles.forEach(v => {
           const key = Object.keys(vehiclesData).find(k => vehiclesData[k] === v);
-          const statusOptions = getStatusOptions(v.status || 'pending');
-          const statusClass = getStatusClass(v.status || 'pending');
+          const statusOptions = getStatusOptions(v.status || 'ontheport');
           const div = document.createElement('div');
           div.className = 'vehicle-box';
           const shipName = v.shipName || '';
@@ -1195,8 +1076,8 @@
           
           div.innerHTML = `
             <div class="vehicle-details">
-              <strong>${highlight((v.brand || '').toString().toUpperCase(), searchQuery)} <span class="model-name-red">${highlight((v.model || '').toString().toUpperCase(), searchQuery)}</span><span class="pending-badge">🚢 ON THE WAY</span></strong>
-              <div class="shipment-info">
+              <strong>${highlight((v.brand || '').toString().toUpperCase(), searchQuery)} <span class="model-name-red">${highlight((v.model || '').toString().toUpperCase(), searchQuery)}</span><span class="port-badge">⚓ ON THE PORT</span></strong>
+              <div class="port-info">
                 <h4>📦 SHIPMENT INFORMATION</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                   <div><b>SHIP NAME:</b> <select class="ship-name-select" data-id="${key}" data-current-ship="${shipName}">${shipOptions}</select></div>
@@ -1210,11 +1091,11 @@
                 ${color ? `<div><b>COLOR:</b> ${highlight(color.toString().toUpperCase(), searchQuery)}</div>` : ''}
                 ${year ? `<div><b>YEAR:</b> ${highlight(year, searchQuery)}</div>` : ''}
                 ${packageType ? `<div><b>PACKAGE:</b> ${highlight(packageType.toString().toUpperCase(), searchQuery)}</div>` : ''}
-                <div><b>STATUS:</b> <select class="statusSelect ${statusClass}" data-id="${key}" data-status="${v.status || 'pending'}">${statusOptions.map(option => `<option value="${option.value}" ${option.selected ? 'selected' : ''}>${option.text}</option>`).join('')}</select></div>
+                <div><b>STATUS:</b> <select class="statusSelect" data-id="${key}" data-status="${v.status || 'ontheport'}">${statusOptions.map(option => `<option value="${option.value}" ${option.selected ? 'selected' : ''}>${option.text}</option>`).join('')}</select></div>
               </div>
             </div>
           `;
-          onTheWayList.appendChild(div);
+          onThePortList.appendChild(div);
           
           const shipSelect = div.querySelector('.ship-name-select');
           if (shipSelect) {
@@ -1246,7 +1127,7 @@
         });
       }
 
-      onTheWayList.addEventListener('change', async (e) => {
+      onThePortList.addEventListener('change', async (e) => {
         if (!e.target.classList.contains('statusSelect')) return;
         const vehicleId = e.target.dataset.id;
         const newStatus = e.target.value;
@@ -1255,8 +1136,8 @@
         const snap = await get(vehicleRef);
         if (!snap.exists()) return;
         const vehicle = snap.val();
-        if (newStatus === 'pending') { e.target.value = 'pending'; return; }
-        if (newStatus === 'available') { showVehicleForm(vehicle, vehicleId); e.target.value = 'pending'; }
+        if (newStatus === 'ontheport') { e.target.value = 'ontheport'; return; }
+        if (newStatus === 'available') { showVehicleForm(vehicle, vehicleId); e.target.value = 'ontheport'; }
       });
 
       completeVehicleForm.addEventListener('submit', async (e) => {
@@ -1275,29 +1156,13 @@
       document.getElementById("downloadBtn").addEventListener("click", () => {
         const vehicles = Object.values(vehiclesData || {});
         const sortedVehicles = [...vehicles].sort((a, b) => { const dateA = a.shipmentDate || ''; const dateB = b.shipmentDate || ''; if (dateA !== dateB) return dateA.localeCompare(dateB); const vesselA = (a.shipName || '').toUpperCase(); const vesselB = (b.shipName || '').toUpperCase(); return vesselA.localeCompare(vesselB); });
-        const wsData = [["DATE", "VESSEL", "NO.", "NAME", "MODEL", "CHASSIS", "YEAR", "COLOR"]];
+        const wsData = [["SHIPMENT DATE", "VESSEL", "NO.", "NAME", "MODEL", "CHASSIS", "YEAR", "COLOR"]];
         sortedVehicles.forEach(v => { wsData.push([ v.shipmentDate ? formatDateForExcel(v.shipmentDate) : '', (v.shipName || '').toUpperCase(), (v.id || v.vehicleId || '').toString(), (v.brand || '').toUpperCase(), (v.model || '').toUpperCase(), v.chassis || '', v.modelYearMonth ? v.modelYearMonth.split('-')[0] : '', (v.color || '').toUpperCase() ]); });
-        const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!cols'] = [{ wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 8 }, { wch: 12 }]; XLSX.utils.book_append_sheet(wb, ws, "OnTheWay"); XLSX.writeFile(wb, `OnTheWay_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+        const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!cols'] = [{ wch: 12 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 8 }, { wch: 12 }]; XLSX.utils.book_append_sheet(wb, ws, "OnThePort"); XLSX.writeFile(wb, `OnThePort_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
       });
-      
-      document.getElementById("moveExpiredBtn").addEventListener("click", async () => {
-        const confirm = await showConfirm("Move all vehicles with passed shipment dates to 'On The Port'?", "Confirm Auto-Move");
-        if (confirm) {
-          await checkAndMoveToPort();
-        }
-      });
-      
       clearAllFilters.addEventListener('click', () => { currentSupplierFilter = ''; currentShipFilter = ''; searchQuery = ''; searchBar.value = ''; clearSearch.style.display = 'none'; renderSupplierButtons(); renderShipNameButtons(); renderList(); });
-      
       loadEssentialData();
       fetchVehicles();
-      
-      // Run auto-move when page loads and every 30 minutes
-      setTimeout(() => {
-        checkAndMoveToPort();
-      }, 3000);
-      
-      setInterval(checkAndMoveToPort, 1800000);
     </script>
   </div>
 </body>
