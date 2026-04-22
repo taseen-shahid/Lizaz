@@ -1,5 +1,12 @@
 // firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { initializeApp } from 'firebase/app';
+import { getAnalytics } from 'firebase/analytics';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { getDatabase, ref, push, set, update, remove, onValue, get } from 'firebase/database';
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+// Same firebaseConfig as before...
+// Rest of the code remains the sameimport { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 // Comment out Analytics - it often fails in production
 // import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
 import { 
