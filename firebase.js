@@ -22,16 +22,6 @@ const firebaseConfig = {
   appId: "1:465801710974:web:0dbe9d8a91e3d8c0bff72f",
   measurementId: "G-V4R36ZYP2T"
 
-  // ----------------- Taseen -----------------
-
-  // apiKey: "AIzaSyCDcm6q_UPyfjoaPnJcLyyqvXoMUDUxvI0",
-  // authDomain: "lizaz-enterprizes.firebaseapp.com",
-  // databaseURL: "https://lizaz-enterprizes-default-rtdb.firebaseio.com",
-  // projectId: "lizaz-enterprizes",
-  // storageBucket: "lizaz-enterprizes.firebasestorage.app",
-  // messagingSenderId: "291248472589",
-  // appId: "1:291248472589:web:71c7663fb51783ecb70b44",
-  // measurementId: "G-1FKXZMPL1Q"
 };
 
 // Initialize Firebase
